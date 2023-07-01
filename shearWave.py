@@ -4,7 +4,7 @@ import numpy as np
 from lb import LatticeBoltzmann
 from plot import Plotter
 
-def shear_wave_sim(experiment, nx: int = 50, ny: int = 50, omega: float = 1.0, epsilon: float = 0.01,
+def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, omega: float = 1.0, epsilon: float = 0.01,
                           steps: int = 2000, p0: float = 1.0):
     
     # split velocity set into x and y components (unused right now)
@@ -38,14 +38,14 @@ def shear_wave_sim(experiment, nx: int = 50, ny: int = 50, omega: float = 1.0, e
         rho, velocities = latticeBoltzmann.output()
 
         # gather quantities for plotting
-        plotter.gather_quantities(velocities, rho, p0, experiment)
+        if viscosity: plotter.gather_quantities(velocities, rho, p0, experiment)
 
         # plot shear wave every 200 steps 
-        if(step % 200 == 0):
+        if((step % 200 == 0) and (not viscosity)):
             plotter.plot_shear_wave(velocities, rho, p0, step, epsilon, nx, ny, experiment)
 
     # return the viscosity
-    return plotter.return_viscosity(x, nx, epsilon, omega, steps, experiment)
+    return plotter.return_viscosity(x, nx, epsilon, omega, steps, experiment) if viscosity else None
     
 
 # Experiments setup
@@ -59,18 +59,20 @@ velocity_path = os.path.join(vis_path, f'velocity_viscosity.png')
 # Shear wave experiment 1 (density) 
 density_simulated_viscosities = []
 density_analytical_viscosities = []
-for omega in omegas:
-    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=omega, experiment='density')
+for omega in omegas: # for viscosity plots
+    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=omega, viscosity=True, experiment='density')
     density_simulated_viscosities.append(simulated_viscosity)
     density_analytical_viscosities.append(analytical_viscosity)
+shear_wave_sim(experiment='density') # for shear wave plots
 
 # Shea wave experiment 2 (velocity)
 velocity_simulated_viscosities = []
 velocity_analytical_viscosities = []
-for omega in omegas:
-    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=omega, experiment='velocity')
+for omega in omegas: # for viscosity plots
+    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=omega, viscosity=True, experiment='velocity')
     velocity_simulated_viscosities.append(simulated_viscosity)
     velocity_analytical_viscosities.append(analytical_viscosity)
+shear_wave_sim(experiment='velocity') # for shear wave plots
 
 # Plot density viscosity vs omega
 plt.cla()
