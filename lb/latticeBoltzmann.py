@@ -9,11 +9,12 @@ W.setflags(write=False)
 
 
 class LatticeBoltzmann():
-    def __init__(self, density, velocity_field) -> None:
-        self.density = density
-        self.velocity_field = velocity_field
-        self.f = self.calculate_equilibrium()
-        #self.f = np.ones((9, 50, 50)) + 0.01 * np.random.randn(9, 50, 50)
+    def __init__(self, rho, velocities, omega, boundaries=[]):
+        self.rho = rho
+        self.velocities = velocities
+        self.omega = omega
+        self.boundaries = boundaries
+        self.f = calculate_equilibrium(self.rho, self.velocities)
         
 
     # Executes one time step for the Lattice Boltzmann method
@@ -25,37 +26,42 @@ class LatticeBoltzmann():
     def stream(self):
         for i in range(9):
             self.f[i] = np.roll(self.f[i], C[i], axis=(0, 1))
-            #self.f[:, :, i] = np.roll(self.f[:, :, i], CX, axis=1)
-            #self.f[:, :, i] = np.roll(self.f[:, :, i], CY, axis=0)
 
     # Collide particles
-    def collide(self, tau=0.6):
-        self.density = self.calculate_density()
-        self.velocity_field = self.calculate_velocity_field()
-        self.f += 1/tau * (self.calculate_equilibrium() - self.f)
+    def collide(self):
+        self.rho = calculate_density(self.f)
+        self.velocities = calculate_velocity_field(self.f, self.rho)
+        self.f += self.omega * (calculate_equilibrium(self.rho, self.velocities) - self.f)
+
+    # Bounce back particles from a wall
+    def bounce(self):
+        for boundary in self.boundaries:
+            pass
+            #boundary.update_velocity(self.f)
+    
+    # Add a boundary to the simulation
+    def add_boundary(self, boundary):
+        self.boundaries.append(boundary)
+
 
     # Output for visualization
     def output(self):
-        return self.density, self.velocity_field
+        return self.rho, self.velocities
 
-    # Helper functions to calculate density, velocity field, equilibrium
 
-    def calculate_density(self):
-        return np.sum(self.f, axis=0)
 
-    def calculate_velocity_field(self):
-        return np.dot(self.f.T, C).T / self.density
 
-    def calculate_equilibrium(self):
-        test1 = np.dot(self.velocity_field.T, C.T).T
-        test2 = np.sum(self.velocity_field**2, axis=0)
-        return (W * (self.density * (1 + 3 * test1 + 9/2 * test1**2 - 3/2 * test2)).T).T
+# Helper functions to calculate density, velocity field, equilibrium
+
+def calculate_density(f):
+    return np.sum(f, axis=0)
+
+def calculate_velocity_field(f, rho):
+    return np.dot(f.T, C).T / rho
+
+def calculate_equilibrium(rho, velocities):
+    test1 = np.dot(velocities.T, C.T).T
+    test2 = np.sum(velocities**2, axis=0)
+    return (W * (rho * (1 + 3 * test1 + 9/2 * test1**2 - 3/2 * test2)).T).T
         
-        # for i in range(9):
-        #    dot_product = np.dot(C[i], self.velocity_field)
-        #    dot_product_squared = dot_product ** 2
-        #    magnitude_squared = np.sum(self.velocity_field**2, axis=0)
-        #
-        #    term1 = W[i] * self.density
-        #    term2 = 1 + 3 * dot_product + 9/2 * dot_product_squared - 3/2 * magnitude_squared
-        #    self.feq[i] = term1 * term2
+    
