@@ -23,10 +23,6 @@ def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, epsilon: 
 
 
     latticeBoltzmann = LatticeBoltzmann(rho, omega, velocities)
-    latticeBoltzmann.add_boundary(boundaries.RigidWall)
-    latticeBoltzmann.add_boundary("bottom", "bounce_back")
-    latticeBoltzmann.add_boundary("left", "moving_wall", 0.1)
-    latticeBoltzmann.add_boundary("right", "moving_wall", 0.1)
     plotter = Plotter()
 
     for(step) in range(steps):
