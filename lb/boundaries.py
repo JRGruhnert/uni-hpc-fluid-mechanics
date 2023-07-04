@@ -1,10 +1,7 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import numpy as np
 
-import lb
-
-
-class Wall(ABC):
+class Boundary():
     def __init__(self, placement):
         self.placement = placement
         if (placement == 'top'):
@@ -21,14 +18,31 @@ class Wall(ABC):
             self.output_channels = np.array([1, 5, 8])
         else:
             raise ValueError("Invalid placement: {}".format(placement))
+ 
+    @abstractmethod
+    def cache(self):
+        """Called before stream and collide to cache the pre-stream values."""
+        pass
+
+    @abstractmethod
+    def apply(self):
+        """Called after the stream and collide to apply boundary conditions."""
+        pass
+
 
     @abstractmethod
     def update_velocity(self, f):
         pass
 
 
-class RigidWall(Wall):
-    def update_velocity(self, f):
+class RigidWall(Boundary):
+    def __init__(self, placement='top'):
+        super().__init__(placement)
+
+    def cache(self, f):
+        pass
+    
+    def apply(self, f):
         if (self.placement == 'top'):
             f[self.input_channels, -1, :] = f[self.output_channels, -1, :]
         elif (self.placement == 'bottom'):
@@ -39,20 +53,22 @@ class RigidWall(Wall):
             f[self.input_channels, :, -1] = f[self.output_channels, -1, :]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
+    
+    def update_velocity(self, f):
+        pass
 
 
-class MovingWall(Wall):
+class MovingWall(Boundary):
     def __init__(self, velocity, placement='top', cs=1/np.sqrt(3)):
         super().__init__(placement)
         self.velocity = velocity
         self.cs = cs
     
-    def backward(self, f):
-        density = self.calculate_density(f)
-        multiplier = 2 * (1/self.cs) ** 2
-        momentum = multiplier * (lb.C @ self.wall_velocity) * (lb.W * density[:, None])
-        momentum = momentum[:, lb.OPPOSITE_IDXS[self.idxs]]
-        self.update_f(f, (self.cache[:, lb.OPPOSITE_IDXS[self.idxs]] - momentum).T)
+    def cache(self, f):
+        pass
+
+    def apply(self, f):
+        pass
 
     def update_velocity(self, f):
         if (self.placement == 'top'):
@@ -67,6 +83,6 @@ class MovingWall(Wall):
             raise ValueError("Invalid placement: {}".format(self.placement))
 
 
-class PeriodicWall(Wall):
+class PeriodicWall(Boundary):
     def update_velocity(self, velocity_field):
         return super().update_velocity(velocity_field)

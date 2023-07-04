@@ -35,7 +35,9 @@ def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, om
     for(step) in range(steps):
         # update the lattice
         latticeBoltzmann.tick()  
-        rho, velocities = latticeBoltzmann.output()
+
+        # get rho and velocities
+        rho, velocities = latticeBoltzmann.rho, latticeBoltzmann.velocities
 
         # gather quantities for plotting
         if viscosity: plotter.gather_quantities(velocities, rho, p0, experiment)
