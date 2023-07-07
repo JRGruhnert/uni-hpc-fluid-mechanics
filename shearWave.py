@@ -3,10 +3,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 from lb import LatticeBoltzmann
 from plot import Plotter
-from scipy.optimize import curve_fit
-from scipy.signal import argrelextrema
 
-def shear_wave_sim(experiment, nx: int = 50, ny: int = 50, omega: float = 1.0, epsilon: float = 0.01,
+def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, omega: float = 1.0, epsilon: float = 0.01,
                           steps: int = 2000, p0: float = 1.0):
     
     # split velocity set into x and y components (unused right now)
@@ -35,33 +33,64 @@ def shear_wave_sim(experiment, nx: int = 50, ny: int = 50, omega: float = 1.0, e
     plotter = Plotter()
 
     for(step) in range(steps):
-        latticeBoltzmann.tick()   
-        #if(step % 200 == 0):
-        rho, velocities = latticeBoltzmann.output()
-        plotter.plot_shear_wave(velocities, rho, p0, step, epsilon, nx, ny, experiment)
-   
-    return plotter.return_viscosity(x, epsilon, omega, steps, experiment)
+        # update the lattice
+        latticeBoltzmann.tick()  
+
+        # get rho and velocities
+        rho, velocities = latticeBoltzmann.get_rho(), latticeBoltzmann.get_velocities()
+
+        # gather quantities for plotting
+        if viscosity: plotter.gather_quantities(velocities, rho, p0, experiment)
+
+        # plot shear wave every 200 steps 
+        if((step % 200 == 0) and (not viscosity)):
+            plotter.plot_shear_wave(velocities, rho, p0, step, epsilon, nx, ny, experiment)
+
+    # return the viscosity
+    return plotter.return_viscosity(x, nx, epsilon, omega, steps, experiment) if viscosity else None
     
 
-ws = np.arange(0.1, 2.01, 0.1)
+# Experiments setup
+omegas = np.arange(0.1, 2.01, 0.1)  
+common_path = os.path.join('results', 'shear_wave_decay')
+vis_path = os.path.join(common_path, 'viscosity')
+os.makedirs(vis_path, exist_ok=True)
+density_path = os.path.join(vis_path, f'density_viscosity.png')
+velocity_path = os.path.join(vis_path, f'velocity_viscosity.png')
 
-       
-        
-simulated_viscosities = []
-analytical_viscosities = []
-for w in ws:
-    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=w, experiment='velocity')
-    simulated_viscosities.append(simulated_viscosity)
-    analytical_viscosities.append(analytical_viscosity)
-        
+# Shear wave experiment 1 (density) 
+density_simulated_viscosities = []
+density_analytical_viscosities = []
+for omega in omegas: # for viscosity plots
+    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=omega, viscosity=True, experiment='density')
+    density_simulated_viscosities.append(simulated_viscosity)
+    density_analytical_viscosities.append(analytical_viscosity)
+shear_wave_sim(experiment='density') # for shear wave plots
+
+# Shea wave experiment 2 (velocity)
+velocity_simulated_viscosities = []
+velocity_analytical_viscosities = []
+for omega in omegas: # for viscosity plots
+    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=omega, viscosity=True, experiment='velocity')
+    velocity_simulated_viscosities.append(simulated_viscosity)
+    velocity_analytical_viscosities.append(analytical_viscosity)
+shear_wave_sim(experiment='velocity') # for shear wave plots
+
+# Plot density viscosity vs omega
 plt.cla()
-plt.scatter(ws, np.log(simulated_viscosities), marker='x')
-plt.scatter(ws, np.log(analytical_viscosities), marker='x')
+plt.scatter(omegas, np.log(density_simulated_viscosities), marker='x')
+plt.scatter(omegas, np.log(density_analytical_viscosities), marker='x')
 plt.xlabel('w')
 plt.ylabel('Log(Viscosity)')
 plt.legend(['Simulated', 'Analytical'])
-common_path = os.path.join('results', 'shear_decay')
-os.makedirs(common_path, exist_ok=True)
-path = os.path.join(common_path, f'viscosity_gjgj.png')
-plt.savefig(path, bbox_inches='tight', pad_inches=0)
+plt.savefig(density_path, bbox_inches='tight', pad_inches=0)
     
+# Plot velocity viscosity vs omega
+plt.cla()
+plt.scatter(omegas, np.log(velocity_simulated_viscosities), marker='x')
+plt.scatter(omegas, np.log(velocity_analytical_viscosities), marker='x')
+plt.xlabel('w')
+plt.ylabel('Log(Viscosity)')
+plt.legend(['Simulated', 'Analytical'])
+plt.savefig(velocity_path, bbox_inches='tight', pad_inches=0)
+   
