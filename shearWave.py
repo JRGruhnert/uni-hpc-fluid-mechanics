@@ -50,7 +50,7 @@ ws = np.arange(0.1, 2.01, 0.1)
 simulated_viscosities = []
 analytical_viscosities = []
 for w in ws:
-    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=w, experiment='density')
+    simulated_viscosity, analytical_viscosity = shear_wave_sim(omega=w, experiment='velocity')
     simulated_viscosities.append(simulated_viscosity)
     analytical_viscosities.append(analytical_viscosity)
         
