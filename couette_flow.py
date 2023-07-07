@@ -15,7 +15,7 @@ def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, epsilon: 
 
     rho = np.zeros((nx, ny))
     velocities = np.zeros((2, nx, ny))
-    boundaries = [MovingWall("top"), RigidWall("bottom"), PeriodicWall("left"), PeriodicWall("right")]
+    boundaries = [MovingWall([0.0, 0.1],"top"), RigidWall("bottom")]#, PeriodicWall("left"), PeriodicWall("right")]
 
 
     latticeBoltzmann = LatticeBoltzmann(rho, velocities, omega, boundaries)
@@ -23,7 +23,8 @@ def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, epsilon: 
 
     for(step) in range(steps):
         latticeBoltzmann.tick()
-        rho, velocities = latticeBoltzmann.rho, latticeBoltzmann.velocities
-        plotter.plot_shear_wave(velocities, step, epsilon, nx, ny)
+        rho, velocities = latticeBoltzmann.get_rho(), latticeBoltzmann.get_velocities()
+        #plotter.plot_shear_wave(velocities, step, epsilon, nx, ny)
+        print("Step: {}".format(step))
 
-
+couette_flow_sim()

@@ -1,5 +1,6 @@
 from abc import abstractmethod
 import numpy as np
+import lb
 
 class Boundary():
     def __init__(self, placement):
@@ -40,22 +41,41 @@ class RigidWall(Boundary):
         super().__init__(placement)
 
     def cache(self, f):
-        pass
-    
-    def apply(self, f):
         if (self.placement == 'top'):
-            f[self.input_channels, -1, :] = f[self.output_channels, -1, :]
+            self.cached = f[:, :, 1]
         elif (self.placement == 'bottom'):
-            f[self.input_channels, 0, :] = f[self.output_channels, 0, :]
+            self.cached = f[:, :, -2].copy()
         elif (self.placement == 'left'):
-            f[self.input_channels, :, 0] = f[self.output_channels, 0, :]
+            self.cached = f[:, 1, :]
         elif (self.placement == 'right'):
-            f[self.input_channels, :, -1] = f[self.output_channels, -1, :]
+            self.cached = f[:, -2, :]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
     
-    def update_velocity(self, f):
-        pass
+    def apply(self, f):
+        if (self.placement == 'top'):
+            f[self.input_channels, -1, :] = self.cached[self.output_channels, -1, :]
+        elif (self.placement == 'bottom'):
+            f[self.input_channels, 0, :] = self.cached[self.output_channels, 0, :]
+        elif (self.placement == 'left'):
+            f[self.input_channels, :, 0] = self.cached[self.output_channels, 0, :]
+        elif (self.placement == 'right'):
+            f[self.input_channels, :, -1] = self.cached[self.output_channels, -1, :]
+        else:
+            raise ValueError("Invalid placement: {}".format(self.placement))
+    
+    def update_velocity(self, velocities):
+        if (self.placement == 'top'):
+            velocities[:, :, 0] = 0.0
+        elif (self.placement == 'bottom'):
+            velocities[:, :, -1] = 0.0
+        elif (self.placement == 'left'):
+            velocities[:, 0,: ] = 0.0
+        elif (self.placement == 'right'):
+            velocities[:, -1,: ] = 0.0
+        else:
+            raise ValueError("Invalid placement: {}".format(self.placement))
+    
 
 
 class MovingWall(Boundary):
@@ -64,23 +84,79 @@ class MovingWall(Boundary):
         self.velocity = velocity
         self.cs = cs
     
+    @abstractmethod
+    def calculate_wall_density(self, f):
+        return lb.calculate_density(f[:,1])
+
+    @abstractmethod
+    def update_f(self, f, value):
+        f[self.input_channels,:,0] = value
+    
     def cache(self, f):
-        pass
-
-    def apply(self, f):
-        pass
-
-    def update_velocity(self, f):
         if (self.placement == 'top'):
-            f[self.input_channels, -1, :] = f[self.output_channels, -1, :]
+            self.cached = f[:, :, 1]
+            print(self.cached.shape)
         elif (self.placement == 'bottom'):
-            f[self.input_channels, 0, :] = f[self.output_channels, 0, :]
+            self.cached = f[:, :, -2]
         elif (self.placement == 'left'):
-            f[self.input_channels, :, 0] = f[self.output_channels, 0, :]
+            self.cached = f[:, 1, :]
         elif (self.placement == 'right'):
-            f[self.input_channels, :, -1] = f[self.output_channels, -1, :]
+            self.cached = f[:, -2, :]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
+
+    def apply(self, f, C, W):
+        #coef = np.zeros((9, 100, 100))
+        #value = 2 * W[self.output_channels] * self.calculate_wall_density(f) * (C[self.output_channels] @ self.velocity)/ self.cs ** 2
+        #coef[self.output_channels, :, -1] = value[:, np.newaxis]
+        #f[self.input_channels, :, -1] = self.cached[self.output_channels, :, -1] - value #coef[self.output_channels, :, -1]
+
+        density = self.calculate_wall_density(f)
+        multiplier = 2 * (1/self.cs) ** 2
+        momentum = multiplier * (C @ self.velocity) * (W * density[:, None])
+        momentum = momentum[self.output_channels, :]
+        self.update_f(f, (self.cached[self.output_channels, :] - momentum).T)
+
+    def update_velocity(self, velocities):
+        if (self.placement == 'top'):
+            velocities[:, :, 0] = 0.0
+        elif (self.placement == 'bottom'):
+            velocities[:, :, -1] = 0.0
+        elif (self.placement == 'left'):
+            velocities[:, 0,: ] = 0.0
+        elif (self.placement == 'right'):
+            velocities[:, -1,: ] = 0.0
+        else:
+            raise ValueError("Invalid placement: {}".format(self.placement))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class PeriodicWall(Boundary):

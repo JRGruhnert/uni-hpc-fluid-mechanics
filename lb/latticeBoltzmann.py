@@ -43,24 +43,16 @@ class LatticeBoltzmann():
      # Bounce back particles from a wall
     def _apply_boundaries(self) -> None:
         for boundary in self.boundaries:
-            boundary.apply(self.f)
+            if(boundary.placement == 'top'):
+                boundary.apply(self.f, C, W)
+            else:
+                boundary.apply(self.f)
 
-    # Output for visualization
-    @property
-    def rho(self) -> np.ndarray:
+    def get_rho(self) -> np.ndarray:
         return self.rho
     
-    @property
-    def velocities(self) -> np.ndarray:
+    def get_velocities(self) -> np.ndarray:
         return self.velocities
-    
-    @property
-    def f(self) -> np.ndarray:
-        return self.f
-    
-
-
-
 
 # Helper functions to calculate density, velocity field, equilibrium
 
