@@ -37,14 +37,14 @@ class Boundary():
 
 
 class RigidWall(Boundary):
-    def __init__(self, placement='top'):
+    def __init__(self, placement='bottom'):
         super().__init__(placement)
 
     def cache(self, f):
         if (self.placement == 'top'):
             self.cached = f[:, :, 1]
         elif (self.placement == 'bottom'):
-            self.cached = f[:, :, -2].copy()
+            self.cached = f[:, :, -2]
         elif (self.placement == 'left'):
             self.cached = f[:, 1, :]
         elif (self.placement == 'right'):
@@ -56,11 +56,14 @@ class RigidWall(Boundary):
         if (self.placement == 'top'):
             f[self.input_channels, -1, :] = self.cached[self.output_channels, -1, :]
         elif (self.placement == 'bottom'):
-            f[self.input_channels, 0, :] = self.cached[self.output_channels, 0, :]
+            print(f[self.input_channels, 0, :].shape)
+            print(self.cached[self.output_channels, 0, None].shape)
+            f[self.input_channels, 0, :] = self.cached[self.output_channels, 0, None]
+            print(f[self.input_channels, 0, :].shape)
         elif (self.placement == 'left'):
-            f[self.input_channels, :, 0] = self.cached[self.output_channels, 0, :]
+            f[self.input_channels, :, 0] = self.cached[self.output_channels, :, 0]
         elif (self.placement == 'right'):
-            f[self.input_channels, :, -1] = self.cached[self.output_channels, -1, :]
+            f[self.input_channels, :, -1] = self.cached[self.output_channels, :, -1]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
     
@@ -84,18 +87,15 @@ class MovingWall(Boundary):
         self.velocity = velocity
         self.cs = cs
     
-    @abstractmethod
     def calculate_wall_density(self, f):
-        return lb.calculate_density(f[:,1])
+        return lb.calculate_density(f[:,:,1])
 
-    @abstractmethod
     def update_f(self, f, value):
         f[self.input_channels,:,0] = value
     
     def cache(self, f):
         if (self.placement == 'top'):
             self.cached = f[:, :, 1]
-            print(self.cached.shape)
         elif (self.placement == 'bottom'):
             self.cached = f[:, :, -2]
         elif (self.placement == 'left'):
@@ -112,20 +112,33 @@ class MovingWall(Boundary):
         #f[self.input_channels, :, -1] = self.cached[self.output_channels, :, -1] - value #coef[self.output_channels, :, -1]
 
         density = self.calculate_wall_density(f)
+        #print("density: " + str(density.shape))
         multiplier = 2 * (1/self.cs) ** 2
-        momentum = multiplier * (C @ self.velocity) * (W * density[:, None])
+        temp = (C @ self.velocity)
+        #print("temp Shape: " + str(temp.shape))
+        #print("W Shape: " + str(W.shape))
+        temp2 = density * W[:, None]
+        #print("temp2 Shape: " + str(temp2.shape))
+        
+        momentum = multiplier * temp2 * temp[:, None]
+        #print("Pre Shape: " + str(momentum.shape))
         momentum = momentum[self.output_channels, :]
-        self.update_f(f, (self.cached[self.output_channels, :] - momentum).T)
+        #print("After Shape: " + str(momentum.shape))
+        temp3 = (self.cached[self.output_channels, :] - momentum)
+        #print("temp3 Shape: " + str(temp4.shape))
+        self.update_f(f, temp3 )
 
     def update_velocity(self, velocities):
         if (self.placement == 'top'):
-            velocities[:, :, 0] = 0.0
+            print(velocities[:, :, -1].shape)
+            #print(self.velocity.shape)
+            velocities[:, :, 0] = self.velocity[:, None]
         elif (self.placement == 'bottom'):
-            velocities[:, :, -1] = 0.0
+            velocities[:, :, -1] = self.velocity
         elif (self.placement == 'left'):
-            velocities[:, 0,: ] = 0.0
+            velocities[:, 0,: ] = self.velocity
         elif (self.placement == 'right'):
-            velocities[:, -1,: ] = 0.0
+            velocities[:, -1,: ] = self.velocity
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 

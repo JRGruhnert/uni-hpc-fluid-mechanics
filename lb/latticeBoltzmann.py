@@ -15,6 +15,7 @@ class LatticeBoltzmann():
         self.omega = omega
         self.boundaries = boundaries
         self.f = calculate_equilibrium(self.rho, self.velocities)
+        print("F lb Shape: " + str(self.f.shape))
         
 
     # Executes one time step for the Lattice Boltzmann method

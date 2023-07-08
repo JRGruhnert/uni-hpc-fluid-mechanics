@@ -60,4 +60,33 @@ class Plotter:
         
         return simulated_viscosity, analytical_viscosity
     
+    
+class Plotter2:
+    def __init__(self):
+        self.fig, self.ax = plt.subplots()
+        self.fig2, self.ax2 = plt.subplots()
+        self.figs, self.axes = [self.fig, self.fig2], [self.ax, self.ax2]
+
+        self.path = os.path.join(PATH, 'cuette flow')
+        os.makedirs(self.path, exist_ok=True)
+
+    
+    def plot_cuette_flow(self, velocities, wall_velocity, step, nx, ny):
+        y = np.arange(ny)
+        analytical = (ny-1 - y) / (ny-1) * wall_velocity[1]
+        
+        self.axes[0].cla()
+        self.axes[0].set_xlim([-0.01, wall_velocity[1]])
+        self.axes[0].axhline(0.0, color='k')
+        self.axes[0].axhline(ny-1, color='r')
+        self.axes[0].plot(velocities[1, :, nx//2], y)
+        self.axes[0].plot(analytical, y)
+        self.axes[0].set_ylabel('y')
+        self.axes[0].set_xlabel('velocity')
+        self.axes[0].legend(['Moving Wall', 'Rigid Wall',
+                                'Simulated Velocity', 'Analytical Velocity'])
+        save_path = os.path.join(self.path, f'couette_flow_{step}')
+        self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)
+    
+    
    
