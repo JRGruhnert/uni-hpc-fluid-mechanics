@@ -9,13 +9,12 @@ W.setflags(write=False)
 
 
 class LatticeBoltzmann():
-    def __init__(self, rho, velocities, omega, boundaries=[]) -> None:
+    def __init__(self, rho, velocities, omega, boundaries = []) -> None:
         self.rho = rho
         self.velocities = velocities
         self.omega = omega
         self.boundaries = boundaries
         self.f = calculate_equilibrium(self.rho, self.velocities)
-        print("F lb Shape: " + str(self.f.shape))
         
 
     # Executes one time step for the Lattice Boltzmann method
