@@ -56,10 +56,7 @@ class RigidWall(Boundary):
         if (self.placement == 'top'):
             f[self.input_channels, -1, :] = self.cached[self.output_channels, -1, :]
         elif (self.placement == 'bottom'):
-            print(f[self.input_channels, 0, :].shape)
-            print(self.cached[self.output_channels, 0, None].shape)
             f[self.input_channels, 0, :] = self.cached[self.output_channels, 0, None]
-            print(f[self.input_channels, 0, :].shape)
         elif (self.placement == 'left'):
             f[self.input_channels, :, 0] = self.cached[self.output_channels, :, 0]
         elif (self.placement == 'right'):
@@ -112,27 +109,27 @@ class MovingWall(Boundary):
         #f[self.input_channels, :, -1] = self.cached[self.output_channels, :, -1] - value #coef[self.output_channels, :, -1]
 
         density = self.calculate_wall_density(f)
-        #print("density: " + str(density.shape))
+        """
         multiplier = 2 * (1/self.cs) ** 2
         temp = (C @ self.velocity)
-        #print("temp Shape: " + str(temp.shape))
-        #print("W Shape: " + str(W.shape))
+        
         temp2 = density * W[:, None]
-        #print("temp2 Shape: " + str(temp2.shape))
         
         momentum = multiplier * temp2 * temp[:, None]
-        #print("Pre Shape: " + str(momentum.shape))
         momentum = momentum[self.output_channels, :]
-        #print("After Shape: " + str(momentum.shape))
         temp3 = (self.cached[self.output_channels, :] - momentum)
-        #print("temp3 Shape: " + str(temp4.shape))
         self.update_f(f, temp3 )
+        """
+        
+        density = self.calculate_wall_density(f)
+        multiplier = 2 * (1/self.cs) ** 2
+        momentum = multiplier * (C @ self.velocity) * (W.T * density[:, None])
+        momentum = momentum[:, self.output_channels].T
+        self.update_f(f, (self.cache[:, self.output_channels].T - momentum).T)
 
     def update_velocity(self, velocities):
         if (self.placement == 'top'):
-            print(velocities[:, :, -1].shape)
-            #print(self.velocity.shape)
-            velocities[:, :, 0] = self.velocity[:, None]
+            velocities.T[:,0] = self.velocity
         elif (self.placement == 'bottom'):
             velocities[:, :, -1] = self.velocity
         elif (self.placement == 'left'):

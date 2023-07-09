@@ -6,7 +6,7 @@ from plot import Plotter2
 from lb import RigidWall, MovingWall, PeriodicWall
 
 def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, epsilon: float = 0.01,
-                          steps: int = 100, p0: float = 1.0):
+                          steps: int = 2000, p0: float = 1.0):
     
     # split velocity set into x and y components (unused right now)
     #ux = np.zeros((nx, ny))
@@ -25,11 +25,10 @@ def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, epsilon: 
         latticeBoltzmann.tick()
         rho, velocities = latticeBoltzmann.get_rho(), latticeBoltzmann.get_velocities()
         # plot shear wave every 200 steps 
-        
-        if((step % 200 == 0)):
-            for boundary in boundaries:
+        for boundary in boundaries:
                 boundary.update_velocity(velocities)
-            plotter.plot_cuette_flow(velocities, np.array(0.0, 0.1), step, nx, ny)
+        if((step % 200 == 0)):
+            plotter.plot_cuette_flow(velocities, [0.0, 0.1], step, nx, ny)
         print("Step: {}".format(step))
 
 couette_flow_sim()

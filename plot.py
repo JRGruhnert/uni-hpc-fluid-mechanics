@@ -89,4 +89,5 @@ class Plotter2:
         self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)
     
     
+    
    
