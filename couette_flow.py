@@ -18,14 +18,11 @@ def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, steps: in
         
         # plot shear wave every 200 steps 
         if((step % 200 == 0)):
-            rho, velocities = latticeBoltzmann.get_rho(), latticeBoltzmann.get_velocities()
-            for boundary in boundaries:
-                boundary.update_velocity(velocities)
+            #rho, velocities = latticeBoltzmann.get_rho(), latticeBoltzmann.get_velocities()
+            for boundary in latticeBoltzmann.boundaries:
+                boundary.update_velocity(latticeBoltzmann.velocities)
 
-            if(velocities == latticeBoltzmann.get_velocities()).all():
-                print("velocities are equal")
-                
-            plotter.plot_cuette_flow(velocities, wall_velocity, step, nx, ny)
+            plotter.plot_cuette_flow(latticeBoltzmann.velocities, wall_velocity, step, nx, ny)
             print("Step: {}".format(step))
 
 couette_flow_sim()

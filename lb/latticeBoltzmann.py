@@ -1,12 +1,5 @@
 import numpy as np
-
-C = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1], # X
-              [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T  # Y
-W = np.array([4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36])
-
-C.setflags(write=False)
-W.setflags(write=False)
-
+from lb.vars import C, W
 
 class LatticeBoltzmann():
     def __init__(self, rho, velocities, omega, boundaries = []) -> None:
@@ -42,17 +35,13 @@ class LatticeBoltzmann():
     
      # Bounce back particles from a wall
     def _apply_boundaries(self) -> None:
+        old_f = self.f.copy()
         for boundary in self.boundaries:
-            if(boundary.placement == 'top'):
-                boundary.apply(self.f, C, W)
-            else:
-                boundary.apply(self.f)
-
-    def get_rho(self) -> np.ndarray:
-        return self.rho
-    
-    def get_velocities(self) -> np.ndarray:
-        return self.velocities
+            boundary.apply(self.f)
+        if(old_f == self.f).all():
+            print("No change")
+        else:
+            print("Change")
 
 # Helper functions to calculate density, velocity field, equilibrium
 

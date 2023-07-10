@@ -13,7 +13,6 @@ class Plotter:
         self.figs, self.axes = [self.fig, self.fig2], [self.ax, self.ax2]
         self.quantities = []
 
-
         self.path = os.path.join(PATH, 'shear_wave_decay')
         self.density_path = os.path.join(self.path, 'density')
         self.velocity_path = os.path.join(self.path, 'velocity')
@@ -44,8 +43,7 @@ class Plotter:
             self.axes[0].set_ylabel('velocity')
             save_path = os.path.join(self.velocity_path, f'shear_wave_{step}.png')
             self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)
-
-     
+  
     def return_viscosity(self, x, nx, epsilon, omega, steps, experiment):
         if experiment == 'density':
             self.quantities = np.array(self.quantities)
@@ -79,7 +77,7 @@ class Plotter2:
         self.axes[0].set_xlim([-0.01, wall_velocity[1]])
         self.axes[0].axhline(0.0, color='k')
         self.axes[0].axhline(ny-1, color='r')
-        self.axes[0].plot(velocities[1, :, nx//2], y)
+        self.axes[0].plot(velocities[1, nx//2, :], y)
         self.axes[0].plot(analytical, y)
         self.axes[0].set_ylabel('y')
         self.axes[0].set_xlabel('velocity')
