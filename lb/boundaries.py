@@ -83,26 +83,37 @@ class MovingWall(Boundary):
         return lb.calculate_density(f[:, :, 1])
 
     def update_f(self, f, value):
-        f.T[0, :, self.input_channels] = value
+        f[self.input_channels, :, 0] = value
 
     def apply(self, f):
-        density = self.calculate_wall_density(f)
+        density2 = self.calculate_wall_density(f)
+        print("density2")
+        print(density2)
         multiplier = 2 * (1/self.cs) ** 2
         temp = (C @ self.velocity)
-        temp2 = density * W[:, None]
-        momentum = multiplier * temp2 * temp[:, None]
-        momentum = momentum[self.output_channels, :]
-        temp3 = (self.f_cache[self.output_channels, :] - momentum)
-        self.update_f(f, temp3)
+        temp2 = density2 * W[:, None]
+        momentum2 = multiplier * temp2 * temp[:, None]
+        momentum2 = momentum2[self.output_channels, :]
+        print("momentum2")
+        print(momentum2)
+        #temp3 = (self.f_cache[self.output_channels, :] - momentum2)
+        #self.update_f(f, temp3)
         
+        #vs = np.array([[0, 0], [1, 0], [0, 1],[-1, 0], [0, -1], [1, 1],[-1, 1], [-1, -1], [1, -1]])
+        #w = np.array([4. / 9.] + [1. / 9.] * 4 + [1. / 36.] * 4)
+        #temp = np.zeros((9, 100, 100))
+        #value = 6 * w[self.output_channels] * (vs[self.output_channels] @ self.velocity)
+        #temp.T[:, :, self.input_channels] = value[np.newaxis, :]
 
-        
-        #density = self.calculate_wall_density(f)
-        #multiplier = 2 * (1/self.cs) ** 2
-        #momentum = multiplier * (C_ALT @ self.velocity) * (W_ALT * density[: , None])
-        #momentum = momentum[:, self.output_channels]
-        #value = (self.f_cache.T[:, self.output_channels] - momentum).T
-        #self.update_f(f, value )
+        density = self.calculate_wall_density(f)
+        print("density1")
+        print(density)
+        multiplier = 2 * (1/self.cs) ** 2
+        momentum = multiplier * (C_ALT @ self.velocity) * (W_ALT * density[: , None])
+        momentum = momentum[:, self.output_channels]
+        print("momentum1")
+        print(momentum)
+        self.update_f(f, (self.f_cache.T[:, self.output_channels] - momentum).T)
 
     def update_velocity(self, velocities):
         if (self.placement == 'top'):

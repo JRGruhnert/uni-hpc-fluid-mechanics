@@ -3,7 +3,7 @@ from lb import LatticeBoltzmann
 from plot import Plotter2
 from lb import RigidWall, MovingWall
 
-def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, steps: int = 2000):
+def couette_flow_sim(nx: int = 100, ny: int = 100, omega: float = 0.6, steps: int = 2):
     
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
