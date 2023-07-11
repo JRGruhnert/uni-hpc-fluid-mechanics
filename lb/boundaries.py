@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 import numpy as np
 import lb
-from lb.vars import C, C_ALT, W, W_ALT
+from lb.vars import C, W
 
 class Boundary(ABC):
     def __init__(self, placement):
@@ -114,7 +114,39 @@ class MovingWall(Boundary):
             raise ValueError("Invalid placement: {}".format(self.placement))
 
 
+class PressureWall(Boundary):
+    def __init__(self, n, pressure, cs=1/np.sqrt(3), placement='left'):
+        #only horizontal implementation
+        if (placement == 'top' or placement == 'bottom'):
+            raise ValueError("Invalid placement: {}".format(self.placement))
+        super().__init__(placement)
+        self.pressure = pressure / cs**2
+        self.cs = cs
+        self.n = n
 
+    def cache(self, f, feq, velocities):
+        if (self.placement == 'left'):
+            temp_feq = lb.calculate_equilibrium(
+                self.pressure * np.ones((1, self.n), dtype=np.float32),
+                velocities[:, None, -2, :]).squeeze()
+            self.f_cache = temp_feq + (f[:, -2] - feq[:, -2])
+        else:
+            temp_feq = lb.calculate_equilibrium(
+                self.pressure * np.ones((1, self.n), dtype=np.float32),
+                #y, None, x, 2
+                #2,x,y
+                velocities[:, None, 1, :]).squeeze()
+            self.f_cache = temp_feq + (f[:, 1] - feq[:, 1])
+
+    def apply(self, f):
+        if (self.placement == 'left'):
+           f[self.input_channels, 0, :] = self.f_cache[self.output_channels, :]
+        else:
+           f[self.input_channels, -1, :] = self.f_cache[self.output_channels, :]
+
+
+    def update_velocity(self, velocities):
+       pass
 
 
 

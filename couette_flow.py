@@ -1,7 +1,6 @@
 import numpy as np
-from lb import LatticeBoltzmann
+from lb import LatticeBoltzmann, RigidWall, MovingWall
 from plot import Plotter2
-from lb import RigidWall, MovingWall
 
 def couette_flow_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int = 2000):
     
