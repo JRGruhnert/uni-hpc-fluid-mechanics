@@ -35,13 +35,8 @@ class LatticeBoltzmann():
     
      # Bounce back particles from a wall
     def _apply_boundaries(self) -> None:
-        old_f = self.f.copy()
         for boundary in self.boundaries:
             boundary.apply(self.f)
-        if(old_f == self.f).all():
-            print("No change")
-        else:
-            print("Change")
 
 # Helper functions to calculate density, velocity field, equilibrium
 
