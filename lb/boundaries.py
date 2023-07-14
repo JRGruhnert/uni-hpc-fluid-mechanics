@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 import numpy as np
 import lb
-from lb.vars import C, W
+from lb.vars import C_ALT, W
 
 class Boundary(ABC):
     def __init__(self, placement):
@@ -16,8 +16,8 @@ class Boundary(ABC):
             self.input_channels = np.array([1, 5, 8])
             self.output_channels = np.array([3, 7, 6])
         elif (placement == 'right'):
-            self.input_channels = np.array([3, 7, 6])
-            self.output_channels = np.array([1, 5, 8])
+            self.input_channels = np.array([3, 6, 7])
+            self.output_channels = np.array([1, 8, 5])
         else:
             raise ValueError("Invalid placement: {}".format(placement))
  
@@ -61,20 +61,20 @@ class RigidWall(Boundary):
     
     def update_velocity(self, velocities):
         if (self.placement == 'top'):
-            velocities.T[0, :] = 0.0
+            velocities[:, :, 0] = 0.0
         elif (self.placement == 'bottom'):
-            velocities.T[-1, :] = 0.0
+            velocities[:, :, -1] = 0.0
         elif (self.placement == 'left'):
-            velocities.T[:, 0] = 0.0
+            velocities[:, 0, :] = 0.0
         elif (self.placement == 'right'):
-            velocities.T[:, -1] = 0.0
+            velocities[:, -1, :] = 0.0
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
     
 
 
 class MovingWall(Boundary):
-    def __init__(self, velocity, placement='top', cs=1/np.sqrt(3)):
+    def __init__(self, placement, velocity, cs=1/np.sqrt(3)):
         self.velocity = velocity
         self.cs = cs
         super().__init__(placement)
@@ -86,36 +86,27 @@ class MovingWall(Boundary):
         f[self.input_channels, :, 0] = value
 
     def apply(self, f):
-        #density2 = self.calculate_wall_density(f)
-        #multiplier = 2 * (1/self.cs) ** 2
-        #temp = (C @ self.velocity)
-        #temp2 = density2 * W[:, None]
-        #momentum2 = multiplier * temp2 * temp[:, None]
-        #momentum2 = momentum2[self.output_channels, :]
-        #temp3 = (self.f_cache[self.output_channels, :] - momentum2)
-        #self.update_f(f, temp3)
-
         density = self.calculate_wall_density(f)
         multiplier = 2 * (1/self.cs) ** 2
-        momentum = multiplier * (C @ self.velocity) * (W * density[: , None])
+        momentum = multiplier * (C_ALT @ self.velocity) * (W * density[: , None])
         momentum = momentum[:, self.output_channels]
         self.update_f(f, (self.f_cache.T[:, self.output_channels] - momentum).T)
 
     def update_velocity(self, velocities):
         if (self.placement == 'top'):
-            velocities.T[0, :] = self.velocity
+            velocities.T[0, :] = np.roll(self.velocity, 1)
         elif (self.placement == 'bottom'):
-            velocities.T[-1, :] = self.velocity
+            velocities[-1, :] = np.roll(self.velocity, 1)
         elif (self.placement == 'left'):
-            velocities.T[:, 0] = self.velocity
+            velocities[:, 0] = np.roll(self.velocity, 1)
         elif (self.placement == 'right'):
-            velocities.T[:, -1] = self.velocity
+            velocities[:, -1] = np.roll(self.velocity, 1)
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
 
-class PressureWall(Boundary):
-    def __init__(self, n, pressure, cs=1/np.sqrt(3), placement='left'):
+class PortalWall(Boundary):
+    def __init__(self, placement, n, pressure, cs=1/np.sqrt(3)):
         #only horizontal implementation
         if (placement == 'top' or placement == 'bottom'):
             raise ValueError("Invalid placement: {}".format(self.placement))
@@ -127,54 +118,21 @@ class PressureWall(Boundary):
     def cache(self, f, feq, velocities):
         if (self.placement == 'left'):
             temp_feq = lb.calculate_equilibrium(
-                self.pressure * np.ones((1, self.n), dtype=np.float32),
-                velocities[:, None, -2, :]).squeeze()
-            self.f_cache = temp_feq + (f[:, -2] - feq[:, -2])
+                np.full(self.n, self.pressure),
+                velocities[:, -2, :]).squeeze()
+            self.f_cache = temp_feq + (f[:, -2, :] - feq[:, -2, :])
         else:
             temp_feq = lb.calculate_equilibrium(
-                self.pressure * np.ones((1, self.n), dtype=np.float32),
-                #y, None, x, 2
-                #2,x,y
-                velocities[:, None, 1, :]).squeeze()
-            self.f_cache = temp_feq + (f[:, 1] - feq[:, 1])
+                np.full(self.n, self.pressure),
+                velocities[:, 1, :]).squeeze()
+            self.f_cache = temp_feq + (f[:, 1, :] - feq[:, 1, :])
 
     def apply(self, f):
         if (self.placement == 'left'):
-           f[self.input_channels, 0, :] = self.f_cache[self.output_channels, :]
+           f[self.input_channels, 0, :] = self.f_cache[self.input_channels, :]
         else:
-           f[self.input_channels, -1, :] = self.f_cache[self.output_channels, :]
+           f[self.input_channels, -1, :] = self.f_cache[self.input_channels, :]
 
 
     def update_velocity(self, velocities):
-       pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class PeriodicWall(Boundary):
-    def update_velocity(self, velocity_field):
-        return super().update_velocity(velocity_field)
+        pass

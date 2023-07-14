@@ -1,5 +1,5 @@
 import numpy as np
-from lb.boundaries import PressureWall
+from lb.boundaries import PortalWall
 from lb.vars import C, W
 
 class LatticeBoltzmann():
@@ -9,6 +9,7 @@ class LatticeBoltzmann():
         self.omega = omega
         self.boundaries = boundaries
         self.f = calculate_equilibrium(self.rho, self.velocities)
+        self.feq = self.f
         
 
     # Executes one time step for the Lattice Boltzmann method
@@ -27,13 +28,14 @@ class LatticeBoltzmann():
     def _collide(self) -> None:
         self.rho = calculate_density(self.f)
         self.velocities = calculate_velocity_field(self.f, self.rho)
-        self.f += self.omega * (calculate_equilibrium(self.rho, self.velocities) - self.f)
+        self.feq = calculate_equilibrium(self.rho, self.velocities)
+        self.f += self.omega * (self.feq - self.f)
 
     # Bounce back particles from a wall
     def _cache_boundaries(self) -> None:
         for boundary in self.boundaries:
-            if isinstance(boundary, PressureWall):
-                boundary.cache(self.f, calculate_equilibrium(self.rho, self.velocities), self.velocities)
+            if isinstance(boundary, PortalWall):
+                boundary.cache(self.f, self.feq, self.velocities)
             else:
                 boundary.cache(self.f)
     

@@ -1,14 +1,14 @@
 import numpy as np
-from lb import LatticeBoltzmann, RigidWall, PressureWall
+from lb import LatticeBoltzmann, RigidWall, PortalWall
 from plot import Plotter3
 
-def poiseuille_flow_sim(nx: int = 50, ny: int = 50, pressure_left= 0.31, pressure_right= 0.3, omega: float = 0.3, steps: int = 2000):
+def poiseuille_flow_sim(nx: int = 100, ny: int = 50, pressure_left= 3.005, pressure_right= 3.0, omega: float = 0.3, steps: int = 2001):
     
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
     
     boundaries = [RigidWall("top"), RigidWall("bottom"), 
-                  PressureWall(nx, pressure_left, placement="left"), PressureWall(nx, pressure_right, placement="right")]
+                  PortalWall("left", ny, pressure_left), PortalWall("right", ny, pressure_right)]
 
     latticeBoltzmann = LatticeBoltzmann(rho, velocities, omega, boundaries)
     plotter = Plotter3()
@@ -16,7 +16,7 @@ def poiseuille_flow_sim(nx: int = 50, ny: int = 50, pressure_left= 0.31, pressur
     for(step) in range(steps):
         latticeBoltzmann.tick()
         
-        # plot shear wave every 200 steps 
+        # plot every 200 steps 
         if((step % 200 == 0)):
             for boundary in latticeBoltzmann.boundaries:
                 boundary.update_velocity(latticeBoltzmann.velocities)

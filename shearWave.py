@@ -6,10 +6,6 @@ from plot import Plotter
 
 def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, omega: float = 1.0, epsilon: float = 0.01,
                           steps: int = 2000, p0: float = 1.0):
-    
-    # split velocity set into x and y components (unused right now)
-    #ux = np.zeros((nx, ny))
-    #uy = np.zeros((nx, ny))
 
     rho = None
     velocities = None
@@ -24,7 +20,7 @@ def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, om
          # shear wave experiment 2 (velocity)
         rho = np.ones((nx, ny))
         velocities = np.zeros((2, nx, ny))
-        velocities[1,:, :] = epsilon * np.sin(2 * np.pi * y / ny)
+        velocities[0, :, :] = epsilon * np.sin(2 * np.pi * y / ny)
     else:
         print("Invalid experiment")
         return
@@ -38,13 +34,14 @@ def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, om
 
         # get rho and velocities
         rho, velocities = latticeBoltzmann.rho, latticeBoltzmann.velocities
-
+        
         # gather quantities for plotting
         if viscosity: plotter.gather_quantities(velocities, rho, p0, experiment)
 
         # plot shear wave every 200 steps 
         if((step % 200 == 0) and (not viscosity)):
             plotter.plot_shear_wave(velocities, rho, p0, step, epsilon, nx, ny, experiment)
+            print("Step: {}".format(step))
 
     # return the viscosity
     return plotter.return_viscosity(x, nx, epsilon, omega, steps, experiment) if viscosity else None
