@@ -2,7 +2,7 @@ import numpy as np
 from lb import LatticeBoltzmann, RigidWall, PortalWall
 from plot import Plotter3
 
-def poiseuille_flow_sim(nx: int = 100, ny: int = 50, pressure_left= 3.005, pressure_right= 3.0, omega: float = 0.3, steps: int = 2001):
+def poiseuille_flow_sim(nx: int = 100, ny: int = 50, pressure_left= 3.005, pressure_right= 3.0, omega: float = 0.3, steps: int = 4001):
     
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
@@ -17,7 +17,7 @@ def poiseuille_flow_sim(nx: int = 100, ny: int = 50, pressure_left= 3.005, press
         latticeBoltzmann.tick()
         
         # plot every 200 steps 
-        if((step % 200 == 0)):
+        if((step % 400 == 0)):
             for boundary in latticeBoltzmann.boundaries:
                 boundary.update_velocity(latticeBoltzmann.velocities)
 

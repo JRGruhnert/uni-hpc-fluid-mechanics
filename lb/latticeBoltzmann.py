@@ -9,7 +9,7 @@ class LatticeBoltzmann():
         self.omega = omega
         self.boundaries = boundaries
         self.f = calculate_equilibrium(self.rho, self.velocities)
-        self.feq = self.f
+        self.feq = self.f.copy()
         
 
     # Executes one time step for the Lattice Boltzmann method

@@ -31,7 +31,7 @@ class Plotter:
         if experiment == "density":
             self.axes[0].cla()
             self.axes[0].set_ylim([-epsilon + p0, epsilon + p0])
-            self.axes[0].plot(np.arange(nx), rho.T[ny//2, :])
+            self.axes[0].plot(np.arange(nx), rho[:, ny//2], linestyle=':')
             self.axes[0].set_xlabel('x')
             self.axes[0].set_ylabel('density')
             save_path = os.path.join(
@@ -40,7 +40,7 @@ class Plotter:
         else:
             self.axes[0].cla()
             self.axes[0].set_ylim([-epsilon, epsilon])
-            self.axes[0].plot(np.arange(ny), velocities[0, nx//2, :])
+            self.axes[0].plot(np.arange(ny), velocities[0, nx//2, :], linestyle=':')
             self.axes[0].set_xlabel('y')
             self.axes[0].set_ylabel('velocity')
             save_path = os.path.join(
@@ -80,7 +80,7 @@ class Plotter2:
         self.axes[0].set_xlim([-0.01, wall_velocity[1]])
         self.axes[0].axhline(0.0, color='k')
         self.axes[0].axhline(ny-1, color='r')
-        self.axes[0].plot(velocities[0, nx//2, :], y)
+        self.axes[0].plot(velocities[0, nx//2, :], y, linestyle=':')
         self.axes[0].plot(analytical, y)
         self.axes[0].set_ylabel('y')
         self.axes[0].set_xlabel('velocity')
@@ -109,7 +109,7 @@ class Plotter3:
                       (ny - 1 - y)) / dynamic_viscosity
         # axes[0].set_xlim([0, np.max(analytical) + 0.001])
 
-        self.axes[0].plot(velocities[0, nx//2, :], y)
+        self.axes[0].plot(velocities[0, nx//2, :], y, linestyle=':')
         self.axes[0].plot(analytical, y)
         self.axes[0].set_ylabel('y')
         self.axes[0].set_xlabel('velocity')

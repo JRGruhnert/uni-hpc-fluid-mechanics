@@ -96,11 +96,11 @@ class MovingWall(Boundary):
         if (self.placement == 'top'):
             velocities.T[0, :] = np.roll(self.velocity, 1)
         elif (self.placement == 'bottom'):
-            velocities[-1, :] = np.roll(self.velocity, 1)
+            velocities.T[-1, :] = np.roll(self.velocity, 1)
         elif (self.placement == 'left'):
-            velocities[:, 0] = np.roll(self.velocity, 1)
+            velocities.T[:, 0] = np.roll(self.velocity, 1)
         elif (self.placement == 'right'):
-            velocities[:, -1] = np.roll(self.velocity, 1)
+            velocities.T[:, -1] = np.roll(self.velocity, 1)
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
