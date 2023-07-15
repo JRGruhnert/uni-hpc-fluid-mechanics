@@ -21,21 +21,22 @@ class Boundary(ABC):
         else:
             raise ValueError("Invalid placement: {}".format(placement))
  
-    def cache(self, f):
+    def pre(self, f):
+        """Called before the streaming to apply boundary conditions."""
         if (self.placement == 'top'):
-            self.f_cache = f[:, :, 1].copy()
+            self.f_cache = f[:, :, 0]
         elif (self.placement == 'bottom'):
-            self.f_cache = f[:, :, -2].copy()
+            self.f_cache = f[:, :, -1]
         elif (self.placement == 'left'):
-            self.f_cache = f[:, 1, :].copy()
+            self.f_cache = f[:, 0, :]
         elif (self.placement == 'right'):
-            self.f_cache = f[:, -2, :].copy()
+            self.f_cache = f[:, -1, :]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
     @abstractmethod
-    def apply(self):
-        """Called after the stream and collide to apply boundary conditions."""
+    def after(self):
+        """Called after the streaming to apply boundary conditions."""
         pass
 
     @abstractmethod
@@ -47,15 +48,15 @@ class RigidWall(Boundary):
     def __init__(self, placement='bottom'):
         super().__init__(placement)
     
-    def apply(self, f):
+    def after(self, f):
         if (self.placement == 'top'):
-            f[self.input_channels, :, 0] = f[self.output_channels, :, 0]
+            f[self.input_channels, :, 0] = self.f_cache[self.output_channels, :]
         elif (self.placement == 'bottom'):
-            f[self.input_channels, :, -1] = f[self.output_channels, :, -1]
+            f[self.input_channels, :, -1] = self.f_cache[self.output_channels, :]
         elif (self.placement == 'left'):
-            f[self.input_channels, 0, :] = f[self.output_channels, 0, :]
+            f[self.input_channels, 0, :] = self.f_cache[self.output_channels, :]
         elif (self.placement == 'right'):
-            f[self.input_channels, -1, :] = f[self.output_channels, -1, :]
+            f[self.input_channels, -1, :] = self.f_cache[self.output_channels, :]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
     
@@ -74,13 +75,14 @@ class RigidWall(Boundary):
 
 
 class MovingWall(Boundary):
-    def __init__(self, placement, velocity, cs=1/np.sqrt(3)):
+    def __init__(self, placement, velocity, density, cs=1/np.sqrt(3)):
         self.velocity = velocity
+        self.density = density[1]
         self.cs = cs
         super().__init__(placement)
     
-    def calculate_wall_density(self, f):
-        return lb.calculate_density(f[:, :, 1])
+    def _calculate_wall_density(self, f):
+        return lb.calculate_density(f[:, :, 0])
 
     def _update_f(self, f, value):
         if (self.placement == 'top'):
@@ -94,8 +96,8 @@ class MovingWall(Boundary):
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
-    def apply(self, f):
-        density = self.calculate_wall_density(f)
+    def after(self, f):
+        density = self._calculate_wall_density(f)
         multiplier = 2 * (1/self.cs) ** 2
         momentum = multiplier * (C_ALT @ self.velocity) * (W * density[: , None])
         momentum = momentum[:, self.output_channels]
@@ -124,23 +126,20 @@ class PortalWall(Boundary):
         self.cs = cs
         self.n = n
 
-    def cache(self, f, f_eq, velocities):
+    def pre(self, f, f_eq, velocities):
         if (self.placement == 'left'):
             temp_feq = lb.calculate_equilibrium(
                 np.full(self.n, self.pressure),
                 velocities[:, -2, :]).squeeze()
-            self.f_cache = temp_feq + (f[:, -2, :] - f_eq[:, -2, :])
+            f[:, 0, :] = temp_feq + (f[:, -2, :] - f_eq[:, -2, :])
         else:
             temp_feq = lb.calculate_equilibrium(
                 np.full(self.n, self.pressure),
                 velocities[:, 1, :]).squeeze()
-            self.f_cache = temp_feq + (f[:, 1, :] - f_eq[:, 1, :])
+            f[:, -1, :] = temp_feq + (f[:, 1, :] - f_eq[:, 1, :])
 
-    def apply(self, f):
-        if (self.placement == 'left'):
-           f[:, 0, :] = self.f_cache
-        else:
-           f[:, -1, :] = self.f_cache
+    def after(self, f):
+        pass
 
 
     def update_velocity(self, velocities):

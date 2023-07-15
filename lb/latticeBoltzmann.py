@@ -14,10 +14,10 @@ class LatticeBoltzmann():
 
     # Executes one time step for the Lattice Boltzmann method
     def tick(self) -> None:
-        self._cache_boundaries()
+        self._pre_stream_boundaries()
         self._stream()
+        self._after_stream_boundaries()
         self._collide()
-        self._apply_boundaries()
 
     # Stream particles
     def _stream(self) -> None:
@@ -28,21 +28,21 @@ class LatticeBoltzmann():
     def _collide(self) -> None:
         self.rho = calculate_density(self.f)
         self.velocities = calculate_velocity_field(self.f, self.rho)
-        self.f_eq = calculate_equilibrium(self.rho, self.velocities)
         self.f += self.omega * (self.f_eq - self.f)
+        self.f_eq = calculate_equilibrium(self.rho, self.velocities)
 
     # Bounce back particles from a wall
-    def _cache_boundaries(self) -> None:
+    def _pre_stream_boundaries(self) -> None:
         for boundary in self.boundaries:
             if isinstance(boundary, PortalWall):
-                boundary.cache(self.f, self.f_eq, self.velocities)
+                boundary.pre(self.f, self.f_eq, self.velocities)
             else:
-                boundary.cache(self.f)
+                boundary.pre(self.f)
     
      # Bounce back particles from a wall
-    def _apply_boundaries(self) -> None:
+    def _after_stream_boundaries(self) -> None:
         for boundary in self.boundaries:
-            boundary.apply(self.f)
+            boundary.after(self.f)
 
 # Helper functions to calculate density, velocity field, equilibrium
 
