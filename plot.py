@@ -5,6 +5,12 @@ from scipy.optimize import curve_fit
 from scipy.signal import argrelextrema
 
 PATH = "results"
+COLORS = ["orange", "blue"]
+ANALYTIC = 0
+SIMULATION = 1
+VELOCITY = 2
+DENSITY = 3
+
 
 
 class Plotter:
@@ -31,7 +37,7 @@ class Plotter:
         if experiment == "density":
             self.axes[0].cla()
             self.axes[0].set_ylim([-epsilon + p0, epsilon + p0])
-            self.axes[0].plot(np.arange(nx), rho.T[ny//2, :])
+            self.axes[0].plot(np.arange(nx), rho[:, ny//2])
             self.axes[0].set_xlabel('x')
             self.axes[0].set_ylabel('density')
             save_path = os.path.join(
@@ -78,14 +84,14 @@ class Plotter2:
 
         self.axes[0].cla()
         self.axes[0].set_xlim([-0.01, wall_velocity[1]])
-        self.axes[0].axhline(0.0, color='k')
-        self.axes[0].axhline(ny-1, color='r')
-        self.axes[0].plot(velocities[0, nx//2, :], y)
-        self.axes[0].plot(analytical, y)
-        self.axes[0].set_ylabel('y')
-        self.axes[0].set_xlabel('velocity')
-        self.axes[0].legend(['Moving Wall', 'Rigid Wall',
-                             'Simulated Velocity', 'Analytical Velocity'])
+        self.axes[0].axhline(0.0, color='red')
+        self.axes[0].axhline(ny-1, color='black')
+        self.axes[0].plot(analytical, y, color=COLORS[ANALYTIC])
+        self.axes[0].plot(velocities[0, nx//2, :], y, '.', color=COLORS[SIMULATION])
+        self.axes[0].set_ylabel('y position (lattice units')
+        self.axes[0].set_xlabel('Velocity u_x(x = 25, y)')
+        self.axes[0].legend(['Moving Wall', 'Rigid Wall', 
+                             'Analytical Velocity','Simulated Velocity'])
         save_path = os.path.join(self.path, f'couette_flow_{step}')
         self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)
 
@@ -108,11 +114,10 @@ class Plotter3:
         analytical = (-0.5 * partial_derivative * y *
                       (ny - 1 - y)) / dynamic_viscosity
         # axes[0].set_xlim([0, np.max(analytical) + 0.001])
-
-        self.axes[0].plot(velocities[0, nx//2, :], y)
-        self.axes[0].plot(analytical, y)
+        self.axes[0].plot(analytical, y, COLORS[ANALYTIC])
+        self.axes[0].plot(velocities[0, nx//2, :], y, '.', COLORS[SIMULATION])
         self.axes[0].set_ylabel('y')
         self.axes[0].set_xlabel('velocity')
-        self.axes[0].legend(['Simulated', 'Analytical'])
+        self.axes[0].legend(['Analytical','Simulated'])
         save_path = os.path.join(self.path, f'pousielle_flow_{step}')
         self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)
