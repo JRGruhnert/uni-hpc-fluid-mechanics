@@ -103,7 +103,7 @@ class Plotter3:
         y = np.arange(ny)
         self.axes[0].cla()
         viscosity = 1/3 * (1/omega - 0.5)
-        dynamic_viscosity = rho.T[:, nx//2] * viscosity
+        dynamic_viscosity = rho[nx//2, :] * viscosity
         partial_derivative = (pressure_out - pressure_in) / nx
         analytical = (-0.5 * partial_derivative * y *
                       (ny - 1 - y)) / dynamic_viscosity

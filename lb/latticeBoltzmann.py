@@ -9,7 +9,7 @@ class LatticeBoltzmann():
         self.omega = omega
         self.boundaries = boundaries
         self.f = calculate_equilibrium(self.rho, self.velocities)
-        self.feq = self.f
+        self.f_eq = self.f
         
 
     # Executes one time step for the Lattice Boltzmann method
@@ -28,14 +28,14 @@ class LatticeBoltzmann():
     def _collide(self) -> None:
         self.rho = calculate_density(self.f)
         self.velocities = calculate_velocity_field(self.f, self.rho)
-        self.feq = calculate_equilibrium(self.rho, self.velocities)
-        self.f += self.omega * (self.feq - self.f)
+        self.f_eq = calculate_equilibrium(self.rho, self.velocities)
+        self.f += self.omega * (self.f_eq - self.f)
 
     # Bounce back particles from a wall
     def _cache_boundaries(self) -> None:
         for boundary in self.boundaries:
             if isinstance(boundary, PortalWall):
-                boundary.cache(self.f, self.feq, self.velocities)
+                boundary.cache(self.f, self.f_eq, self.velocities)
             else:
                 boundary.cache(self.f)
     
