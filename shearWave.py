@@ -14,13 +14,13 @@ def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, om
 
     if(experiment == "density"):
        # shear wave experiment 1 (density)
-        rho = p0 + epsilon * np.sin(2 * np.pi * x / nx)
+        rho = (p0 + epsilon * np.sin(2 * np.pi * x / nx)).T
         velocities = np.zeros((2, nx, ny))
     elif(experiment == "velocity"):
          # shear wave experiment 2 (velocity)
         rho = np.ones((nx, ny))
         velocities = np.zeros((2, nx, ny))
-        velocities[0, :, :] = epsilon * np.sin(2 * np.pi * y / ny)
+        velocities[0, :, :] = (epsilon * np.sin(2 * np.pi * y / ny)).T
     else:
         print("Invalid experiment")
         return
