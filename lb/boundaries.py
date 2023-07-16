@@ -1,6 +1,5 @@
 from abc import abstractmethod, ABC
 import numpy as np
-import lb
 from lb.vars import C_ALT, W
 
 class Boundary(ABC):

@@ -1,7 +1,6 @@
 import numpy as np
 from lb.boundaries import PortalWall
 from lb.vars import C, W
-from mpi4py import MPI
 
 class LatticeBoltzmann():
     def __init__(self, rho, velocities, omega, boundaries = []) -> None:
