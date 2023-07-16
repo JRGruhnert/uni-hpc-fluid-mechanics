@@ -121,3 +121,27 @@ class Plotter3:
         self.axes[0].legend(['Analytical','Simulated'])
         save_path = os.path.join(self.path, f'pousielle_flow_{step}')
         self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)
+
+
+class Plotter4:
+    def __init__(self):
+        self.fig, self.ax = plt.subplots()
+        self.fig2, self.ax2 = plt.subplots()
+        self.figs, self.axes = [self.fig, self.fig2], [self.ax, self.ax2]
+
+        self.path = os.path.join(PATH, 'sliding lid')
+        os.makedirs(self.path, exist_ok=True)
+
+    def plot_sliding_lid(self, velocities, step, nx, ny):
+        self.axes[0].cla()
+        self.axes[0].set_xlim([0, nx])
+        self.axes[0].set_xlim([0, ny])
+        v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
+        self.axes[0].imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
+        x, y = np.meshgrid(np.arange(nx), np.arange(ny))
+        self.axes[0].streamplot(x, y, velocities.T[:, :, 0], velocities.T[:, :, 1])
+        self.axes[0].legend(['Analytical','Simulated'])
+        self.axes[0].set_ylabel('y')
+        self.axes[0].set_xlabel('x')
+        save_path = os.path.join(self.path, f'sliding_lid_{step}')
+        self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)

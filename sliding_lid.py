@@ -1,27 +1,26 @@
 import numpy as np
 from lb import LatticeBoltzmann, RigidWall, MovingWall
-from plot import Plotter2
+from plot import Plotter4
 
-def couette_flow_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int = 2000):
+def sliding_lid_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int = 20001):
     
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
-    wall_velocity = [0.0, 0.1]
-    boundaries = [MovingWall("top", wall_velocity), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
+    wall_velocity = np.array([0.0, 0.1])
+    boundaries = [MovingWall("top", wall_velocity, rho), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
 
+    #omega = 1 / (0.5 + ((wall_velocity[1] * nx) / 1000) / (1/3))
+    #assert(omega < 1.7)
+    
     latticeBoltzmann = LatticeBoltzmann(rho, velocities, omega, boundaries)
-    plotter = Plotter2()
+    plotter = Plotter4()
 
     for(step) in range(steps):
         latticeBoltzmann.tick()
         
-        # plot shear wave every 200 steps 
-        if((step % 200 == 0)):
-            #rho, velocities = latticeBoltzmann.get_rho(), latticeBoltzmann.get_velocities()
-            for boundary in latticeBoltzmann.boundaries:
-                boundary.update_velocity(latticeBoltzmann.velocities)
-
-            plotter.plot_cuette_flow(latticeBoltzmann.velocities, wall_velocity, step, nx, ny)
+        # plot sliding lid every 200 steps 
+        if((step % 1000 == 0)):
+            plotter.plot_sliding_lid(latticeBoltzmann.velocities, step, nx, ny)
             print("Step: {}".format(step))
 
-couette_flow_sim()
+sliding_lid_sim()
