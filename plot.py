@@ -101,23 +101,23 @@ class Plotter3:
     def plot_poiseuille_flow(self, rho, velocities, omega, pressure_in, pressure_out, step, nx, ny):
         y = np.arange(ny)
         self.ax.cla()
-        #viscosity = 1/3 * (1/omega - 0.5)
-        #dynamic_viscosity = rho[nx//2, :] * viscosity
-        #partial_derivative = (pressure_out - pressure_in) / nx
-        #analytical = (-0.5 * partial_derivative * y *
-        #              (ny - 1 - y)) / dynamic_viscosity
+        viscosity = 1/3 * (1/omega - 0.5)
+        dynamic_viscosity = rho[nx//2, :] * viscosity
+        partial_derivative = (pressure_out - pressure_in) / nx
+        analytical = (-0.5 * partial_derivative * y *
+                      (ny - 1 - y)) / dynamic_viscosity
         
-        shear_viscosity = (1 / omega - 0.5) / 3
-        delta = 2.0 / nx / shear_viscosity / 2.
-        y = np.linspace(0, ny, ny)
-        u_analytical = delta * y * (ny - y) / 3.
+        #shear_viscosity = (1 / omega - 0.5) / 3
+        #delta = 2.0 / nx / shear_viscosity / 2.
+        #y = np.linspace(0, ny, ny)
+        #analytical = delta * y * (ny - y) / 3.
 
         # ax.set_xlim([0, np.max(analytical) + 0.001])
-        #self.ax.plot(u_analytical, y, COLORS[ANALYTIC])
+        self.ax.plot(analytical, y, COLORS[ANALYTIC])
         self.ax.plot(velocities[0, nx//2, :], y, '.', COLORS[SIMULATION])
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('velocity')
-        #self.ax.legend(['Analytical','Simulated'])
+        self.ax.legend(['Analytical','Simulated'])
         save_path = os.path.join(self.path, f'pousielle_flow_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
