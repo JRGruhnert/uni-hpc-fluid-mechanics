@@ -2,7 +2,7 @@ import numpy as np
 from lb import LatticeBoltzmann, RigidWall, MovingWall
 from plot import Plotter4
 
-def sliding_lid_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int = 20001):
+def sliding_lid_sim(nx: int = 300, ny: int = 300, omega: float = 0.3, steps: int = 20001):
     
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
