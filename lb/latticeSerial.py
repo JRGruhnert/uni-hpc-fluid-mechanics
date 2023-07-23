@@ -1,9 +1,9 @@
 import numpy as np
-from lb.boundaries import PortalWall
+from lb.boundaries import Boundary, PortalWall
 from lb.vars import C, W
 
 class LatticeBoltzmann():
-    def __init__(self, rho, velocities, omega, boundaries = []) -> None:
+    def __init__(self, rho: np.ndarray, velocities: np.ndarray, omega: float, boundaries: list[Boundary] = []) -> None:
         self.rho = rho
         self.velocities = velocities
         self.omega = omega
@@ -46,13 +46,13 @@ class LatticeBoltzmann():
 
 # Helper functions to calculate density, velocity field, equilibrium
 
-def calculate_density(f) -> np.ndarray:
+def calculate_density(f: np.ndarray) -> np.ndarray:
     return np.sum(f, axis=0)
 
-def calculate_velocity_field(f, rho) -> np.ndarray:
+def calculate_velocity_field(f: np.ndarray, rho: np.ndarray) -> np.ndarray:
     return np.dot(f.T, C).T / rho
 
-def calculate_equilibrium(rho, velocities) -> np.ndarray:
+def calculate_equilibrium(rho: np.ndarray, velocities: np.ndarray) -> np.ndarray:
     test1 = np.dot(velocities.T, C.T).T
     test2 = np.sum(velocities**2, axis=0)
     return (W * (rho * (1 + 3 * test1 + 9/2 * test1**2 - 3/2 * test2)).T).T

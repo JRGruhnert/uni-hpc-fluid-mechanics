@@ -1,10 +1,10 @@
 import numpy as np
 from lb.manager import WorkManager 
-from lb.boundaries import PortalWall
+from lb.boundaries import PortalWall, Boundary
 from lb.vars import C, W
 
 class LatticeBoltzmannParallel():
-    def __init__(self, rho, velocities, omega, manager: WorkManager, boundaries = []) -> None:
+    def __init__(self, rho: np.ndarray, velocities: np.ndarray, omega: float, manager: WorkManager, boundaries: list[Boundary] = []) -> None:
         self.rho = rho
         self.velocities = velocities
         self.omega = omega
@@ -34,7 +34,7 @@ class LatticeBoltzmannParallel():
         self.f += self.omega * (self.f_eq - self.f)
         self.f_eq = calculate_equilibrium(self.rho, self.velocities)
 
-    # Bounce back particles from a wall
+    # Cache particles on boundary lattice points
     def _pre_stream_boundaries(self) -> None:
         for boundary in self.boundaries:
             if isinstance(boundary, PortalWall):
@@ -42,7 +42,7 @@ class LatticeBoltzmannParallel():
             else:
                 boundary.pre(self.f)
     
-     # Bounce back particles from a wall
+     # Bounce back particles from boundary lattice points
     def _after_stream_boundaries(self) -> None:
         for boundary in self.boundaries:
             boundary.after(self.f)
@@ -52,13 +52,13 @@ class LatticeBoltzmannParallel():
 
 # Helper functions to calculate density, velocity field, equilibrium
 
-def calculate_density(f) -> np.ndarray:
+def calculate_density(f: np.ndarray) -> np.ndarray:
     return np.sum(f, axis=0)
 
-def calculate_velocity_field(f, rho) -> np.ndarray:
+def calculate_velocity_field(f: np.ndarray, rho: np.ndarray) -> np.ndarray:
     return np.dot(f.T, C).T / rho
 
-def calculate_equilibrium(rho, velocities) -> np.ndarray:
+def calculate_equilibrium(rho: np.ndarray, velocities: np.ndarray) -> np.ndarray:
     test1 = np.dot(velocities.T, C.T).T
     test2 = np.sum(velocities**2, axis=0)
     return (W * (rho * (1 + 3 * test1 + 9/2 * test1**2 - 3/2 * test2)).T).T
