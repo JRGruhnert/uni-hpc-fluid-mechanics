@@ -39,10 +39,6 @@ class Boundary(ABC):
         """Called after the streaming to apply boundary conditions."""
         pass
 
-    @abstractmethod
-    def update_velocity(self, f):
-        pass
-
 
 class RigidWall(Boundary):
     def __init__(self, placement='bottom'):
@@ -60,24 +56,11 @@ class RigidWall(Boundary):
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
     
-    def update_velocity(self, velocities):
-        if (self.placement == 'top'):
-            velocities[:, :, 0] = 0.0
-        elif (self.placement == 'bottom'):
-            velocities[:, :, -1] = 0.0
-        elif (self.placement == 'left'):
-            velocities[:, 0, :] = 0.0
-        elif (self.placement == 'right'):
-            velocities[:, -1, :] = 0.0
-        else:
-            raise ValueError("Invalid placement: {}".format(self.placement))
-    
 
 
 class MovingWall(Boundary):
-    def __init__(self, placement, velocity, density, cs=1/np.sqrt(3)):
+    def __init__(self, placement, velocity, cs=1/np.sqrt(3)):
         self.velocity = velocity
-        self.density = density[1]
         self.cs = cs
         super().__init__(placement)
     
@@ -102,19 +85,6 @@ class MovingWall(Boundary):
         momentum = multiplier * (C_ALT @ self.velocity) * (W * density[: , None])
         momentum = momentum[:, self.output_channels]
         self._update_f(f, (self.f_cache.T[:, self.output_channels] - momentum).T)
-
-    def update_velocity(self, velocities):
-        if (self.placement == 'top'):
-            velocities.T[0, :] = np.roll(self.velocity, 1)
-        elif (self.placement == 'bottom'):
-            velocities.T[-1, :] = np.roll(self.velocity, 1)
-        elif (self.placement == 'left'):
-            velocities.T[:, 0] = np.roll(self.velocity, 1)
-        elif (self.placement == 'right'):
-            velocities.T[:, -1] = np.roll(self.velocity, 1)
-        else:
-            raise ValueError("Invalid placement: {}".format(self.placement))
-
 
 class PortalWall(Boundary):
     def __init__(self, placement, n, pressure, cs=1/np.sqrt(3)):
@@ -141,6 +111,3 @@ class PortalWall(Boundary):
     def after(self, f):
         pass
 
-
-    def update_velocity(self, velocities):
-        pass
