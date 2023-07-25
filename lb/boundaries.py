@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 import numpy as np
 import lb
-from lb.vars import C_ALT, W
+from lb.vars import C, W
 
 class Boundary(ABC):
     def __init__(self, placement):
@@ -58,33 +58,21 @@ class RigidWall(Boundary):
     
 
 
-class MovingWall(Boundary):
+class TopMovingWall(Boundary):
     def __init__(self, placement, velocity, cs=1/np.sqrt(3)):
-        self.velocity = velocity
-        self.cs = cs
-        super().__init__(placement)
-    
-    def _calculate_wall_density(self, f):
-        return lb.calculate_density(f[:, :, 0])
-
-    def _update_f(self, f, value):
-        if (self.placement == 'top'):
-            f[self.input_channels, :, 0] = value
-        elif (self.placement == 'bottom'):
-            f[self.input_channels, :, -1] = value
-        elif (self.placement == 'left'):
-            f[self.input_channels, 0, :] = value
-        elif (self.placement == 'right'):
-            f[self.input_channels, -1, :] = value
-        else:
+        #only horizontal implementation
+        if (placement == 'bottom' or placement == 'left' or placement == 'right'):
             raise ValueError("Invalid placement: {}".format(self.placement))
-
+        super().__init__(placement)
+        self.velocity = [velocity, 0.0]
+        self.cs = cs
+    
     def after(self, f):
-        density = self._calculate_wall_density(f)
-        multiplier = 2 * (1/self.cs) ** 2
-        momentum = multiplier * (C_ALT @ self.velocity) * (W * density[: , None])
+        rho = lb.calculate_density(f[:, :, 0])
+        factor = 2 * (1/self.cs) ** 2
+        momentum = factor * (C @ self.velocity) * (W * rho[:, None])
         momentum = momentum[:, self.output_channels]
-        self._update_f(f, (self.f_cache.T[:, self.output_channels] - momentum).T)
+        f[self.input_channels, :, 0] = (self.f_cache[self.output_channels] - momentum.T)
 
 class PortalWall(Boundary):
     def __init__(self, placement, n, pressure, cs=1/np.sqrt(3)):

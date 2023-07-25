@@ -1,5 +1,5 @@
 import numpy as np
-from lb import RigidWall, MovingWall, LatticeBoltzmannParallel, WorkManager
+from lb import RigidWall, TopMovingWall, LatticeBoltzmannParallel, WorkManager
 from plot import Plotter4
 
 def sliding_lid_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int = 20001):
@@ -7,7 +7,7 @@ def sliding_lid_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int =
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
     wall_velocity = np.array([0.0, 0.1])
-    boundaries = [MovingWall("top", wall_velocity, rho), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
+    boundaries = [TopMovingWall("top", wall_velocity, rho), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
 
     #omega = 1 / (0.5 + ((wall_velocity[1] * nx) / 1000) / (1/3))
     #assert(omega < 1.7)

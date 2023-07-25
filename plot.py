@@ -78,7 +78,7 @@ class Plotter2:
         analytical = (ny-1 - y) / (ny-1) * wall_velocity[1]
 
         self.ax.cla()
-        self.ax.set_xlim([-0.01, wall_velocity[1]])
+        self.ax.set_xlim([-0.01, wall_velocity])
         self.ax.axhline(0.0, color='red')
         self.ax.axhline(ny-1, color='black')
         self.ax.plot(analytical, y, color=COLORS[ANALYTIC])
