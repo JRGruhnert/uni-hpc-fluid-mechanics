@@ -48,6 +48,7 @@ def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, om
     
 
 # Experiments setup
+#omegas = np.linspace(1e-6, 2 - 1e-6, 20 + 1)[1:]
 omegas = np.arange(0.1, 2.01, 0.1)  
 common_path = os.path.join('results', 'shear_wave_decay')
 vis_path = os.path.join(common_path, 'viscosity')
@@ -78,6 +79,7 @@ plt.cla()
 plt.scatter(omegas, np.log(density_simulated_viscosities), marker='x')
 plt.scatter(omegas, np.log(density_analytical_viscosities), marker='x')
 plt.xlabel('w')
+plt.yscale('log')
 plt.ylabel('Log(Viscosity)')
 plt.legend(['Simulated', 'Analytical'])
 plt.savefig(density_path, bbox_inches='tight', pad_inches=0)
@@ -87,6 +89,7 @@ plt.cla()
 plt.scatter(omegas, np.log(velocity_simulated_viscosities), marker='x')
 plt.scatter(omegas, np.log(velocity_analytical_viscosities), marker='x')
 plt.xlabel('w')
+plt.yscale('log')
 plt.ylabel('Log(Viscosity)')
 plt.legend(['Simulated', 'Analytical'])
 plt.savefig(velocity_path, bbox_inches='tight', pad_inches=0)

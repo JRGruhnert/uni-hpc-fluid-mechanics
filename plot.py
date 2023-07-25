@@ -11,6 +11,9 @@ SIMULATION = 1
 VELOCITY = 2
 DENSITY = 3
 
+plt.rcParams['mathtext.fontset'] = 'stix'  # The setting of math font
+#plt.style.use('ggplot')
+
 
 class Plotter:
     def __init__(self):
@@ -48,7 +51,7 @@ class Plotter:
             self.ax.set_ylabel('velocity')
             save_path = os.path.join(
                 self.velocity_path, f'shear_wave_{step}.png')
-            self.figs[0].savefig(save_path, bbox_inches='tight', pad_inches=0)
+            self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
     def return_viscosity(self, x, nx, epsilon, omega, steps, experiment):
         if experiment == 'density':
@@ -67,29 +70,34 @@ class Plotter:
 
 
 class Plotter2:
-    def __init__(self):
+    def __init__(self, nx, ny, wall_velocity):
+        padding_y = 0.5
+        padding_x = 0.002
+        self.lw_analytic = 2
+        self.lw_simulated = 2
         self.fig, self.ax = plt.subplots()
-
         self.path = os.path.join(PATH, 'cuette flow')
         os.makedirs(self.path, exist_ok=True)
-
-    def plot_cuette_flow(self, velocities, wall_velocity, step, nx, ny):
-        y = np.arange(ny)
-        analytical = (ny-1 - y) / (ny-1) * wall_velocity[1]
-
-        self.ax.cla()
-        self.ax.set_xlim([-0.01, wall_velocity])
-        self.ax.axhline(0.0, color='red')
-        self.ax.axhline(ny-1, color='black')
-        self.ax.plot(analytical, y, color=COLORS[ANALYTIC])
-        self.ax.plot(velocities[0, nx//2, :], y, '.', color=COLORS[SIMULATION])
+        self.nx = nx
+        self.ny = ny
+        self.y = np.arange(ny)
+        self.analytical = (ny-1 - self.y) / (ny-1) * wall_velocity
+        self.ax.set_xlim([0.0 - padding_x, wall_velocity + padding_x])
+        self.ax.set_ylim([ny - 1 + padding_y, -padding_y])
+        self.ax.axhline(0.0, linewidth=2, color='red')
+        self.ax.axhline(self.ny-1, linewidth=2, color='black')
         self.ax.set_ylabel('y position (lattice units')
         self.ax.set_xlabel('Velocity u_x(x = 25, y)')
         self.ax.legend(['Moving Wall', 'Rigid Wall', 
-                             'Analytical Velocity','Simulated Velocity'], loc='upper right')
+                             'Analytical Velocity','Simulated Velocity'], loc='lower right')
+
+    def plot_cuette_flow(self, velocities):
+        self.ax.plot(velocities[0, self.nx//2, :], self.y, '.', markersize=self.lw_simulated)#, color=COLORS[SIMULATION])
+
+    def save(self, step):
+        self.ax.plot(self.analytical, self.y, lw=self.lw_analytic)#, color=COLORS[ANALYTIC])
         save_path = os.path.join(self.path, f'couette_flow_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
-
 
 class Plotter3:
     def __init__(self):
@@ -132,11 +140,11 @@ class Plotter4:
     def plot_sliding_lid(self, velocities, step, nx, ny):
         self.ax.cla()
         self.ax.set_xlim([0, nx])
-        self.ax.set_xlim([0, ny])
-        v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
-        self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
+        self.ax.set_ylim([ny, 0])
+        #v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
+        #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
         x, y = np.meshgrid(np.arange(nx), np.arange(ny))
-        self.ax.streamplot(x, y, velocities.T[:, :, 0], velocities.T[:, :, 1])
+        self.ax.streamplot(x, y, velocities.T[:, :, 0], velocities.T[:, :, 1], cmap='RdBu_r', density=0.8)
         self.ax.legend(['Analytical','Simulated'])
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('x')

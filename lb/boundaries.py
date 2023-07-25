@@ -13,24 +13,24 @@ class Boundary(ABC):
             self.input_channels = np.array([4, 7, 8])
             self.output_channels = np.array([2, 5, 6])
         elif (placement == 'left'):
-            self.input_channels = np.array([1, 5, 8])
-            self.output_channels = np.array([3, 7, 6])
+            self.input_channels = np.array([3, 7, 6])
+            self.output_channels = np.array([1, 5, 8])
         elif (placement == 'right'):
-            self.input_channels = np.array([3, 6, 7])
-            self.output_channels = np.array([1, 8, 5])
+            self.input_channels = np.array([1, 8, 5])
+            self.output_channels = np.array([3, 6, 7])
         else:
             raise ValueError("Invalid placement: {}".format(placement))
  
     def pre(self, f):
-        """Called before the streaming to apply boundary conditions."""
+        """Called before the streaming to cache boundary conditions."""
         if (self.placement == 'top'):
-            self.f_cache = f[:, :, 0]
+            self.f_cache = f[:, :, 0].copy()
         elif (self.placement == 'bottom'):
-            self.f_cache = f[:, :, -1]
+            self.f_cache = f[:, :, -1].copy()
         elif (self.placement == 'left'):
-            self.f_cache = f[:, 0, :]
+            self.f_cache = f[:, 0, :].copy()
         elif (self.placement == 'right'):
-            self.f_cache = f[:, -1, :]
+            self.f_cache = f[:, -1, :].copy()
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
