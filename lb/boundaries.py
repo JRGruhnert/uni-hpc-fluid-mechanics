@@ -7,11 +7,11 @@ class Boundary(ABC):
     def __init__(self, placement):
         self.placement = placement
         if (placement == 'top'):
-            self.input_channels = np.array([2, 5, 6])
-            self.output_channels = np.array([4, 7, 8])
-        elif (placement == 'bottom'):
             self.input_channels = np.array([4, 7, 8])
             self.output_channels = np.array([2, 5, 6])
+        elif (placement == 'bottom'):
+            self.input_channels = np.array([2, 5, 6])
+            self.output_channels =  np.array([4, 7, 8])
         elif (placement == 'left'):
             self.input_channels = np.array([3, 7, 6])
             self.output_channels = np.array([1, 5, 8])
@@ -24,9 +24,9 @@ class Boundary(ABC):
     def pre(self, f):
         """Called before the streaming to cache boundary conditions."""
         if (self.placement == 'top'):
-            self.f_cache = f[:, :, 0].copy()
-        elif (self.placement == 'bottom'):
             self.f_cache = f[:, :, -1].copy()
+        elif (self.placement == 'bottom'):
+            self.f_cache = f[:, :, 0].copy()
         elif (self.placement == 'left'):
             self.f_cache = f[:, 0, :].copy()
         elif (self.placement == 'right'):
@@ -46,9 +46,9 @@ class RigidWall(Boundary):
     
     def after(self, f):
         if (self.placement == 'top'):
-            f[self.input_channels, :, 0] = self.f_cache[self.output_channels, :]
-        elif (self.placement == 'bottom'):
             f[self.input_channels, :, -1] = self.f_cache[self.output_channels, :]
+        elif (self.placement == 'bottom'):
+            f[self.input_channels, :, 0] = self.f_cache[self.output_channels, :]
         elif (self.placement == 'left'):
             f[self.input_channels, 0, :] = self.f_cache[self.output_channels, :]
         elif (self.placement == 'right'):
@@ -68,11 +68,11 @@ class TopMovingWall(Boundary):
         self.cs = cs
     
     def after(self, f):
-        rho = lb.calculate_density(f[:, :, 0])
+        rho = lb.calculate_density(f[:, :, -1])
         factor = 2 * (1/self.cs) ** 2
         momentum = factor * (C @ self.velocity) * (W * rho[:, None])
         momentum = momentum[:, self.output_channels]
-        f[self.input_channels, :, 0] = (self.f_cache[self.output_channels] - momentum.T)
+        f[self.input_channels, :, -1] = (self.f_cache[self.output_channels] - momentum.T)
 
 class PortalWall(Boundary):
     def __init__(self, placement, n, pressure, cs=1/np.sqrt(3)):

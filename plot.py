@@ -81,11 +81,11 @@ class Plotter2:
         self.nx = nx
         self.ny = ny
         self.y = np.arange(ny)
-        self.analytical = (ny-1 - self.y) / (ny-1) * wall_velocity
+        self.analytical = (self.y) / (ny-1) * wall_velocity
         self.ax.set_xlim([0.0 - padding_x, wall_velocity + padding_x])
-        self.ax.set_ylim([ny - 1 + padding_y, -padding_y])
-        self.ax.axhline(0.0, linewidth=2, color='red')
-        self.ax.axhline(self.ny-1, linewidth=2, color='black')
+        self.ax.set_ylim([-padding_y, ny - 1 + padding_y])
+        self.ax.axhline(self.ny-1, linewidth=2, color='red')
+        self.ax.axhline(0.0, linewidth=2, color='black')
         self.ax.set_ylabel('y position (lattice units')
         self.ax.set_xlabel('Velocity u_x(x = 25, y)')
         self.ax.legend(['Moving Wall', 'Rigid Wall', 
