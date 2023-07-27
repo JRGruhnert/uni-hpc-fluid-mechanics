@@ -24,13 +24,13 @@ class Boundary(ABC):
     def pre(self, f):
         """Called before the streaming to cache boundary conditions."""
         if (self.placement == 'top'):
-            self.f_cache = f[:, :, -1].copy()
+            self.f_cache = f[:, :, -1]
         elif (self.placement == 'bottom'):
-            self.f_cache = f[:, :, 0].copy()
+            self.f_cache = f[:, :, 0]
         elif (self.placement == 'left'):
-            self.f_cache = f[:, 0, :].copy()
+            self.f_cache = f[:, 0, :]
         elif (self.placement == 'right'):
-            self.f_cache = f[:, -1, :].copy()
+            self.f_cache = f[:, -1, :]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
@@ -46,13 +46,13 @@ class RigidWall(Boundary):
     
     def after(self, f):
         if (self.placement == 'top'):
-            f[self.input_channels, :, -1] = self.f_cache[self.output_channels, :]
+            f[self.input_channels, :, -1] = self.f_cache[self.output_channels]
         elif (self.placement == 'bottom'):
-            f[self.input_channels, :, 0] = self.f_cache[self.output_channels, :]
+            f[self.input_channels, :, 0] = self.f_cache[self.output_channels]
         elif (self.placement == 'left'):
-            f[self.input_channels, 0, :] = self.f_cache[self.output_channels, :]
+            f[self.input_channels, 0, :] = self.f_cache[self.output_channels]
         elif (self.placement == 'right'):
-            f[self.input_channels, -1, :] = self.f_cache[self.output_channels, :]
+            f[self.input_channels, -1, :] = self.f_cache[self.output_channels]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
     
@@ -68,7 +68,7 @@ class TopMovingWall(Boundary):
         self.cs = cs
     
     def after(self, f):
-        rho = lb.calculate_density(f[:, :, -1])
+        rho = np.sum(f[:, :, 0], axis=0)#self.density#lb.calculate_density(f[:, :, -1])
         factor = 2 * (1/self.cs) ** 2
         momentum = factor * (C @ self.velocity) * (W * rho[:, None])
         momentum = momentum[:, self.output_channels]

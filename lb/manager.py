@@ -1,11 +1,11 @@
-#from mpi4py import MPI
+from mpi4py import MPI
 
 
 class WorkManager():
     def __init__(self, global_nx: int, global_ny: int, worker_grid_x: int, worker_grid_y: int ):
         self._workers = MPI.COMM_WORLD.Get_size()
         self._rank = MPI.COMM_WORLD.Get_rank()
-        self._comm = MPI.COMM_WORLD.Create_cart(dims=[worker_grid_x, worker_grid_y], periods=[False, False], reorder=False)
+        self._comm = MPI.COMM_WORLD.Create_cart((worker_grid_x, worker_grid_y), periods=(False, False))
         
         assert self._workers > worker_grid_x * worker_grid_y #max size
 

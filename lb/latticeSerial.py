@@ -28,8 +28,8 @@ class LatticeBoltzmann():
     def _collide(self) -> None:
         self.rho = calculate_density(self.f)
         self.velocities = calculate_velocity_field(self.f, self.rho)
-        self.f += self.omega * (self.f_eq - self.f)
         self.f_eq = calculate_equilibrium(self.rho, self.velocities)
+        self.f += self.omega * (self.f_eq - self.f)
 
     # Bounce back particles from a wall
     def _pre_stream_boundaries(self) -> None:
@@ -50,11 +50,16 @@ def calculate_density(f: np.ndarray) -> np.ndarray:
     return np.sum(f, axis=0)
 
 def calculate_velocity_field(f: np.ndarray, rho: np.ndarray) -> np.ndarray:
+    #return np.einsum('ij,jkl->ikl', C.T, f) / rho
+    #print(rho)
     return np.dot(f.T, C).T / rho
 
 def calculate_equilibrium(rho: np.ndarray, velocities: np.ndarray) -> np.ndarray:
+    #test1 = (velocities.T @ C.T).T
+    #test2 = np.linalg.norm(velocities, axis=0) ** 2
+
     test1 = np.dot(velocities.T, C.T).T
     test2 = np.sum(velocities**2, axis=0)
-    return (W * (rho * (1 + 3 * test1 + 9/2 * test1**2 - 3/2 * test2)).T).T
+    return (W * (rho * (1 + 3 * test1 + 4.5 * test1**2 - 1.5 * test2)).T).T
         
     

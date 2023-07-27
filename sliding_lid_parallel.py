@@ -9,9 +9,9 @@ def sliding_lid_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int =
     wall_velocity = np.array([0.0, 0.1])
     boundaries = [TopMovingWall("top", wall_velocity, rho), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
 
-    #omega = 1 / (0.5 + ((wall_velocity[1] * nx) / 1000) / (1/3))
+    omega = 1 / (0.5 + ((wall_velocity[1] * nx) / 1000) / (1/3))
     #assert(omega < 1.7)
-    manager = WorkManager(nx, ny, 4, 4)
+    manager = WorkManager(nx, ny, 10, 10)
 
     latticeBoltzmann = LatticeBoltzmannParallel(rho, velocities, omega, manager, boundaries)
     plotter = Plotter4()

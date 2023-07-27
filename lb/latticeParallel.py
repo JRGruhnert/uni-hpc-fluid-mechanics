@@ -31,8 +31,8 @@ class LatticeBoltzmannParallel():
     def _collide(self) -> None:
         self.rho = calculate_density(self.f)
         self.velocities = calculate_velocity_field(self.f, self.rho)
-        self.f += self.omega * (self.f_eq - self.f)
         self.f_eq = calculate_equilibrium(self.rho, self.velocities)
+        self.f += self.omega * (self.f_eq - self.f)
 
     # Cache particles on boundary lattice points
     def _pre_stream_boundaries(self) -> None:

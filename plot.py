@@ -99,6 +99,7 @@ class Plotter2:
         save_path = os.path.join(self.path, f'couette_flow_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
+
 class Plotter3:
     def __init__(self):
         self.fig, self.ax = plt.subplots()
@@ -131,22 +132,23 @@ class Plotter3:
 
 
 class Plotter4:
-    def __init__(self, experiment='sliding_lid'):
+    def __init__(self, nx, ny, experiment='sliding_lid'):
         self.fig, self.ax = plt.subplots()
         self.experiment = experiment
+        self.ax.set_xlim([0, nx])
+        self.ax.set_ylim([0, ny])
+        self.x, self.y = np.meshgrid(np.arange(nx), np.arange(ny))
         self.path = os.path.join(PATH, experiment)
         os.makedirs(self.path, exist_ok=True)
 
     def plot_sliding_lid(self, velocities, step, nx, ny):
         self.ax.cla()
-        self.ax.set_xlim([0, nx])
-        self.ax.set_ylim([ny, 0])
         #v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
         #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
-        x, y = np.meshgrid(np.arange(nx), np.arange(ny))
-        self.ax.streamplot(x, y, velocities.T[:, :, 0], velocities.T[:, :, 1], cmap='RdBu_r', density=0.8)
-        self.ax.legend(['Analytical','Simulated'])
+        self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], velocities.T[:, :, 1], cmap='RdBu_r', density=0.8)
+        #self.ax.legend(['Analytical'])
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('x')
+        self.ax.set_title(f'Step: {step}')
         save_path = os.path.join(self.path, f'{self.experiment}_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)

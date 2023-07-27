@@ -4,7 +4,7 @@ import numpy as np
 from lb import LatticeBoltzmann
 from plot import Plotter
 
-def shear_wave_sim(experiment, viscosity = False, nx: int = 50, ny: int = 50, omega: float = 1.0, epsilon: float = 0.01,
+def shear_wave_sim(experiment, viscosity = False, nx: int = 100, ny: int = 50, omega: float = 0.3, epsilon: float = 0.01,
                           steps: int = 2000, p0: float = 1.0):
 
     rho = None
