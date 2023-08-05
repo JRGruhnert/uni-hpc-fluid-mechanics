@@ -133,6 +133,8 @@ class Plotter3:
 
 class Plotter4:
     def __init__(self, nx, ny, experiment='sliding_lid'):
+        padding_y = 0.5
+        padding_x = 0.002
         self.fig, self.ax = plt.subplots()
         self.experiment = experiment
         self.ax.set_xlim([0, nx])

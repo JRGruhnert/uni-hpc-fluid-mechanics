@@ -1,6 +1,5 @@
 
 from matplotlib import pyplot as plt
-from matplotlib import animation
 import numpy as np
 
 nx = 15

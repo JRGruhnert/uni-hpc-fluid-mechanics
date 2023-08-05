@@ -16,7 +16,7 @@ def sliding_lid_sim(nx: int = 300, ny: int = 300, omega: float = 0.3, steps: int
     #assert(omega <= 1.7)
     
     latticeBoltzmann = LatticeBoltzmann(rho, velocities, omega, boundaries)
-    plotter = Plotter4()
+    plotter = Plotter4(nx, ny)
 
     for(step) in range(steps):
         latticeBoltzmann.tick()
