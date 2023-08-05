@@ -152,7 +152,7 @@ class Plotter4:
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('x')
         self.ax.set_title(f'Step: {step}')
-        save_path = os.path.join(self.path, f'{self.experiment}_{step}')
+        save_path = os.path.join(self.path, f'{"sliding_lid"}_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 class Plotter5:
@@ -175,15 +175,16 @@ class Plotter5:
         mpi_path_y = os.path.join(self.src_path, y_velocities_file)
 
         velocities_x, velocities_y = np.load(mpi_path_x), np.load(mpi_path_y)
-        #velocities = np.stack([velocities_x, velocities_y], axis=-1)
-        
+        #print("velocities x shape is: " + str(velocities_x.shape))
+        #print("velocities x: " + str(velocities_x))
+        #print("velocities y shape is: " + str(velocities_y.shape))
+        #print("velocities y: " + str(velocities_y))
         self.ax.cla()
-        #v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
         #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
-        self.ax.streamplot(self.x, self.y, velocities_x.T[:, :, 0], velocities_y.T[:, :, 1], cmap='RdBu_r', density=0.8)
+        self.ax.streamplot(self.x, self.y, velocities_x.T, velocities_y.T, cmap='RdBu_r', density=0.8)
         #self.ax.legend(['Analytical'])
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('x')
         self.ax.set_title(f'Step: {step}')
-        save_path = os.path.join(self.path, f'{self.experiment}_{step}')
+        save_path = os.path.join(self.path, f'{"mpi_sliding_lid"}_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)

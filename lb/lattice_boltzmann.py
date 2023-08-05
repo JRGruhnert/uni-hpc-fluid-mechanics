@@ -20,7 +20,11 @@ class LatticeBoltzmann():
         self._after_stream_boundaries()
         self._collide()
     
-    def communicate(self, comm, left_src, left_dst, right_src, right_dst, bottom_src, bottom_dst, top_src, top_dst) -> None:
+    def communicate(self, comm, 
+                    left_src, left_dst, 
+                    right_src, right_dst, 
+                    bottom_src, bottom_dst, 
+                    top_src, top_dst) -> None:
         # Send to left
         recvbuf = self.f[:, -1, :].copy()
         comm.Sendrecv(self.f[:, 1, :].copy(), left_dst,

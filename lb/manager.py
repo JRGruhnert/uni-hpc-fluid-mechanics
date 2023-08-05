@@ -3,11 +3,10 @@ from mpi4py import MPI
 import numpy as np
 from numpy.lib.format import dtype_to_descr, magic
 from lb.boundaries import RigidWall, TopMovingWall
-
 from lb.lattice_boltzmann import LatticeBoltzmann
 
 
-class WorkManager():
+class MpiWrapper():
     def __init__(self, global_nx: int, global_ny: int, worker_dim_x: int, worker_dim_y: int):
         self.worker_dim_x = worker_dim_x
         self.worker_dim_y = worker_dim_y
@@ -61,17 +60,24 @@ class WorkManager():
             self.local_ny += 1
             self.without_ghosts_y = slice(1, self.local_ny+1)
 
-        #mpix, mpiy = self._comm.Get_coords(self._rank)
+        mpix, mpiy = self._cart_comm.Get_coords(self._rank)
+        #print('Rank {} has domain coordinates {}x{} and a local grid of size {}x{} (including ghost cells).'.format(self._rank, mpix, mpiy, self.local_nx - 1, self.local_ny - 1))
         rho = np.ones((self.local_nx, self.local_ny))
         velocities = np.zeros((2, self.local_nx, self.local_ny))
+        print("Rho shape: {}".format(rho.shape))
+        print("Velocities shape: {}".format(velocities.shape))
         wall_velocity = 0.05
         omega = 1.7
-        boundaries = [RigidWall("bottom"), RigidWall("left"), RigidWall("right"), TopMovingWall("top", wall_velocity)]
+        boundaries = [TopMovingWall("top", wall_velocity), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
         self.lattice = LatticeBoltzmann(rho, velocities, omega, boundaries)
     
     def tick(self):
-        self.lattice.communicate(self._cart_comm, self.left_src, self.left_dst, self.right_src, self.right_dst, self.bottom_src, self.bottom_dst, self.top_src, self.top_dst)
         self.lattice.tick()
+        self.lattice.communicate(self._cart_comm, 
+                                 self.left_src, self.left_dst, 
+                                 self.right_src, self.right_dst, 
+                                 self.bottom_src, self.bottom_dst, 
+                                 self.top_src, self.top_dst)
     
 
     def save_mpiio(self, filename, index):
@@ -79,15 +85,13 @@ class WorkManager():
         source='sliding_lid/mpi_raw'
         src_path = os.path.join(PATH, source)
         os.makedirs(src_path, exist_ok=True)
-        filename = os.path.join(self.src_path, filename)
-        
+        filename = os.path.join(src_path, filename)
         
         local_velocities = self.lattice.velocities[index, self.without_ghosts_x, self.without_ghosts_y]
-        print("Local velocities shape on index: " + str(index) + " is: " + str(local_velocities.shape))
+        
         magic_str = magic(1, 0)
         nx = np.empty_like(self.local_nx - 1)
         ny = np.empty_like(self.local_ny - 1)
-        print("nx and ny on index: " + str(index) + " are: " + str(nx.shape) + " " + str(ny.shape))
         commx = self._cart_comm.Sub((True, False))
         commy = self._cart_comm.Sub((False, True))
         commx.Allreduce(np.asarray(self.local_nx - 1), nx)

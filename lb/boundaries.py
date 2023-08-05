@@ -25,13 +25,13 @@ class Boundary(ABC):
     def pre(self, f):
         """Called before the streaming to cache boundary conditions."""
         if (self.placement == 'top'):
-            self.f_cache = f[:, :, -1]
+            self.f_cache = f[:, :, -1].copy()
         elif (self.placement == 'bottom'):
-            self.f_cache = f[:, :, 0]
+            self.f_cache = f[:, :, 0].copy()
         elif (self.placement == 'left'):
-            self.f_cache = f[:, 0, :]
+            self.f_cache = f[:, 0, :].copy()
         elif (self.placement == 'right'):
-            self.f_cache = f[:, -1, :]
+            self.f_cache = f[:, -1, :].copy()
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
