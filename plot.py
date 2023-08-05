@@ -132,7 +132,7 @@ class Plotter3:
 
 
 class Plotter4:
-    def __init__(self, nx, ny, experiment='sliding_lid'):
+    def __init__(self, nx, ny, experiment='sliding_lid/sequential'):
         padding_y = 0.5
         padding_x = 0.002
         self.fig, self.ax = plt.subplots()
@@ -143,11 +143,44 @@ class Plotter4:
         self.path = os.path.join(PATH, experiment)
         os.makedirs(self.path, exist_ok=True)
 
-    def plot_sliding_lid(self, velocities, step, nx, ny):
+    def plot_sliding_lid(self, velocities, step):
         self.ax.cla()
         #v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
         #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
         self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], velocities.T[:, :, 1], cmap='RdBu_r', density=0.8)
+        #self.ax.legend(['Analytical'])
+        self.ax.set_ylabel('y')
+        self.ax.set_xlabel('x')
+        self.ax.set_title(f'Step: {step}')
+        save_path = os.path.join(self.path, f'{self.experiment}_{step}')
+        self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
+
+class Plotter5:
+    def __init__(self, nx, ny, experiment='sliding_lid/parrallel', source='sliding_lid/mpi_raw'):
+        padding_y = 0.5
+        padding_x = 0.002
+        self.fig, self.ax = plt.subplots()
+        self.experiment = experiment
+        self.source = source
+        self.ax.set_xlim([0, nx])
+        self.ax.set_ylim([0, ny])
+        self.x, self.y = np.meshgrid(np.arange(nx), np.arange(ny))
+        self.path = os.path.join(PATH, experiment)
+        os.makedirs(self.path, exist_ok=True)
+        self.src_path = os.path.join(PATH, source)
+        os.makedirs(self.src_path, exist_ok=True)
+
+    def plot_sliding_lid_mpi(self, step, x_velocities_file, y_velocities_file):
+        mpi_path_x = os.path.join(self.src_path, x_velocities_file)
+        mpi_path_y = os.path.join(self.src_path, y_velocities_file)
+
+        velocities_x, velocities_y = np.load(mpi_path_x), np.load(mpi_path_y)
+        #velocities = np.stack([velocities_x, velocities_y], axis=-1)
+        
+        self.ax.cla()
+        #v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
+        #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
+        self.ax.streamplot(self.x, self.y, velocities_x.T[:, :, 0], velocities_y.T[:, :, 1], cmap='RdBu_r', density=0.8)
         #self.ax.legend(['Analytical'])
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('x')

@@ -23,7 +23,7 @@ def sliding_lid_sim(nx: int = 300, ny: int = 300, omega: float = 0.3, steps: int
         
         # plot sliding lid every 1000 steps 
         if((step % 10000 == 0)):
-            plotter.plot_sliding_lid(latticeBoltzmann.velocities, step, nx, ny)
+            plotter.plot_sliding_lid(latticeBoltzmann.velocities, step)
             print("Step: {}".format(step))
 
 sliding_lid_sim()

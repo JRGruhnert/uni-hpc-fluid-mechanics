@@ -1,27 +1,25 @@
+from matplotlib import pyplot as plt
 import numpy as np
-from lb import RigidWall, TopMovingWall, LatticeBoltzmannParallel, WorkManager
-from plot import Plotter4
+from lb import WorkManager
+from plot import Plotter4, Plotter5
 
 def sliding_lid_sim(nx: int = 50, ny: int = 50, omega: float = 0.3, steps: int = 20001):
     
-    rho = np.ones((nx, ny))
-    velocities = np.zeros((2, nx, ny))
-    wall_velocity = np.array([0.0, 0.1])
-    boundaries = [TopMovingWall("top", wall_velocity, rho), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
-
-    omega = 1 / (0.5 + ((wall_velocity[1] * nx) / 1000) / (1/3))
     #assert(omega < 1.7)
-    manager = WorkManager(nx, ny, 10, 10)
+    manager = WorkManager(nx, ny, 2, 2)
 
-    latticeBoltzmann = LatticeBoltzmannParallel(rho, velocities, omega, manager, boundaries)
-    plotter = Plotter4()
+    plotter = Plotter5(nx, ny)
 
     for(step) in range(steps):
-        latticeBoltzmann.tick()
+        manager.tick()
         
-        # plot sliding lid every 200 steps 
+        # plot sliding lid every 1000 steps 
         if((step % 1000 == 0)):
-            #plotter.plot_sliding_lid(latticeBoltzmann.velocities, step, nx, ny)
+            velocities_x_file = 'ux_{}.npy'.format(step)
+            velocities_y_file = 'uy_{}.npy'.format(step)
+            manager.save_velocities(velocities_x_file, velocities_y_file)
+            plotter.plot_sliding_lid_mpi(step, velocities_x_file, velocities_y_file)
             print("Step: {}".format(step))
 
 sliding_lid_sim()
+
