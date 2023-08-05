@@ -96,7 +96,7 @@ class WorkManager():
         header_len = len(arr_dict_str) + len(magic_str) + 2
 
         x_offset = np.zeros_like(self.local_nx - 1)
-        commx.Exscan(np.asarray(ny * self.local_nx - 1), x_offset)
+        commx.Exscan(np.asarray(ny * (self.local_nx - 1)), x_offset)
         y_offset = np.zeros_like(self.local_ny - 1)
         commy.Exscan(np.asarray(self.local_ny - 1), y_offset)
 
