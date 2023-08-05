@@ -1,3 +1,4 @@
+import os
 from mpi4py import MPI
 import numpy as np
 from numpy.lib.format import dtype_to_descr, magic
@@ -74,7 +75,13 @@ class WorkManager():
     
 
     def save_mpiio(self, filename, index):
-
+        PATH = "results"
+        source='sliding_lid/mpi_raw'
+        src_path = os.path.join(PATH, source)
+        os.makedirs(src_path, exist_ok=True)
+        filename = os.path.join(self.src_path, filename)
+        
+        
         local_velocities = self.lattice.velocities[index, self.without_ghosts_x, self.without_ghosts_y]
         print("Local velocities shape on index: " + str(index) + " is: " + str(local_velocities.shape))
         magic_str = magic(1, 0)

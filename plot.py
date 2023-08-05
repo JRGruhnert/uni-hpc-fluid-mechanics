@@ -156,7 +156,7 @@ class Plotter4:
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 class Plotter5:
-    def __init__(self, nx, ny, experiment='sliding_lid/parrallel', source='sliding_lid/mpi_raw'):
+    def __init__(self, nx, ny, experiment='sliding_lid/parallel', source='sliding_lid/mpi_raw'):
         padding_y = 0.5
         padding_x = 0.002
         self.fig, self.ax = plt.subplots()
