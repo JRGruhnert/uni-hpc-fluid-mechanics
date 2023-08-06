@@ -4,7 +4,7 @@ from plot import Plotter5
 def sliding_lid_sim(nx: int = 300, ny: int = 300, omega: float = 0.3, steps: int = 20001):
     
     #assert(omega < 1.7)
-    manager = MpiWrapper(nx, ny, 2, 2)
+    manager = MpiWrapper(nx, ny, 2, 3)
 
     plotter = Plotter5(nx, ny)
 
