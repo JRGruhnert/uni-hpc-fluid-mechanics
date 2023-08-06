@@ -22,46 +22,50 @@ class MpiWrapper():
         #print("Workers: {}".format(self._workers))
         #print("Worker grid x: {}".format(self.worker_dim_x))
         #print("Worker grid y: {}".format(self.worker_dim_y))
-        self._cart_comm = self._comm.Create_cart((self.nx_worker_dim, self.ny_worker_dim), periods=(False, False))
+        self._cart_comm = self._comm.Create_cart((self.nx_worker_dim, self.ny_worker_dim), periods=(False, False), reorder=False)
         
         #assert self._workers > worker_grid_x * worker_grid_y #max size
-
-        self.left_src, self.left_dst = self._cart_comm.Shift(0, -1)
-        self.right_src, self.right_dst = self._cart_comm.Shift(0, 1)
-        self.bottom_src, self.bottom_dst = self._cart_comm.Shift(1, -1)
-        self.top_src, self.top_dst = self._cart_comm.Shift(1, 1)
+        print("Topologies: {}".format(self._cart_comm.Get_topo()))
+        print("Coords{} and rank {}".format(self._cart_comm.Get_coords(self._rank), self._rank))
+        self.from_right, self.left_address = self._cart_comm.Shift(0, -1)
+        self.from_left, self.right_address = self._cart_comm.Shift(0, 1)
+        self.from_top, self.bottom_address = self._cart_comm.Shift(1, -1)
+        self.from_bottom, self.top_address = self._cart_comm.Shift(1, 1)
         
         self.nx_local_buffered = nx_global//self.nx_worker_dim
         self.ny_local_buffered = ny_global//self.ny_worker_dim
-        # We need to take care that the total number of *local* grid points sums up to
-        # nx. The right and topmost MPI processes are adjusted such that this is
-        # fulfilled even if nx, ny is not divisible by the number of MPI processes.
-        if self.right_dst < 0:
-            # This is the rightmost MPI process
+        
+        self.nx_local_without_buffer = slice(1, self.nx_local_buffered-1)
+        self.ny_local_without_buffer = slice(1, self.ny_local_buffered-1)
+
+        if self.right_address < 0:# This is the rightmost MPI process
             self.nx_local_buffered = nx_global - self.nx_local_buffered*(self.nx_worker_dim-1)
-        self.nx_local_without_buffer = slice(0, self.nx_local_buffered)
-        if self.right_dst >= 0:
-            # Add ghost cell
-            self.nx_local_buffered += 1
-        if self.left_dst >= 0:
-            # Add ghost cell
-            self.nx_local_buffered += 1
             self.nx_local_without_buffer = slice(1, self.nx_local_buffered)
-            
-        if self.top_dst < 0:
-            # This is the topmost MPI process
+            self.nx_local_buffered += 2
+        elif self.left_address < 0: # This is the leftmost MPI process
+            self.nx_local_buffered += 1
+            self.nx_local_without_buffer = slice(0, self.nx_local_buffered)
+        else:
+            self.nx_local_buffered += 2
+            self.nx_local_without_buffer = slice(1, self.nx_local_buffered)
+
+        if self.top_address < 0:# This is the topmost MPI process
             self.ny_local_buffered = ny_global - self.ny_local_buffered*(self.ny_worker_dim-1)
-        self.ny_local_without_buffer = slice(0, self.ny_local_buffered)
-        if self.top_dst >= 0:
-            # Add ghost cell
+            self.ny_local_without_buffer = slice(1, self.ny_local_buffered)
+            self.ny_local_buffered += 2
+        elif self.bottom_address < 0: # This is the leftmost MPI process
             self.ny_local_buffered += 1
-        if self.bottom_dst >= 0:
-            # Add ghost cell
-            self.ny_local_buffered += 1
+            self.ny_local_without_buffer = slice(0, self.ny_local_buffered)
+        else:
+            self.ny_local_buffered += 2
             self.ny_local_without_buffer = slice(1, self.ny_local_buffered)
 
+        #print("Rank: {}, left_src: {}, right_src: {}, bottom_src: {}, top_src: {}".format(self._rank, self.from_right, self.from_left, self.from_top, self.from_bottom))
+        #print("Rank: {}, left_dst: {}, right_dst: {}, bottom_dst: {}, top_dst: {}".format(self._rank, self.left_address, self.right_address, self.bottom_address, self.top_address))
+        #print("Rank: {}, x buffer: {}, y buffer: {}".format(self._rank, self.nx_local_buffered, self.ny_local_buffered))
+        #print("Rank: {}, x without buffer: {}, y without buffer: {}".format(self._rank, self.nx_local_without_buffer, self.ny_local_without_buffer))
         mpix, mpiy = self._cart_comm.Get_coords(self._rank)
-        #print('Rank {} has domain coordinates {}x{} and a local grid of size {}x{} (including ghost cells).'.format(self._rank, mpix, mpiy, self.local_nx - 1, self.local_ny - 1))
+        #print("Rank: {}, coords: {}, {}".format(self._rank, mpix, mpiy))
         rho = np.ones((self.nx_local_buffered, self.ny_local_buffered))
         velocities = np.zeros((2, self.nx_local_buffered, self.ny_local_buffered))
         print("Rho shape: {}".format(rho.shape))
@@ -76,11 +80,10 @@ class MpiWrapper():
     def tick(self):
         self.lattice.tick()
         self.lattice.communicate(self._cart_comm, 
-                                 self.left_src, self.left_dst, 
-                                 self.right_src, self.right_dst, 
-                                 self.bottom_src, self.bottom_dst, 
-                                 self.top_src, self.top_dst)
-    
+                                 self.from_right, self.left_address, 
+                                 self.from_left, self.right_address, 
+                                 self.from_top, self.bottom_address, 
+                                 self.from_bottom, self.top_address)
 
     def save_mpiio(self, filename, index):
         PATH = "results"

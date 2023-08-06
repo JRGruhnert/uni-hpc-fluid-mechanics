@@ -21,29 +21,29 @@ class LatticeBoltzmann():
         self._collide()
     
     def communicate(self, comm, 
-                    left_src, left_dst, 
-                    right_src, right_dst, 
-                    bottom_src, bottom_dst, 
-                    top_src, top_dst) -> None:
+                    from_right, left_address, 
+                    from_left, right_address, 
+                    from_top, bottom_address, 
+                    from_bottom, top_address) -> None:
         # Send to left
         recvbuf = self.f[:, 0, :].copy()
-        comm.Sendrecv(self.f[:, 1, :].copy(), left_dst,
-                  recvbuf=recvbuf, source=left_src, sendtag = 11, recvtag = 12)
+        comm.Sendrecv(sendbuf=self.f[:, 1, :].copy(), dest=left_address,
+                  recvbuf=recvbuf, source=from_left)
         self.f[:, 0, :] = recvbuf
         # Send to right
         recvbuf = self.f[:, -1, :].copy()
-        comm.Sendrecv(self.f[:, -2, :].copy(), right_dst,
-                  recvbuf=recvbuf, source=right_src, sendtag = 12, recvtag = 11)
+        comm.Sendrecv(sendbuf=self.f[:, -2, :].copy(), dest=right_address,
+                  recvbuf=recvbuf, source=from_right)
         self.f[:, -1, :] = recvbuf
         # Send to bottom
         recvbuf = self.f[:, :, 0].copy()
-        comm.Sendrecv(self.f[:, :, 1].copy(), bottom_dst,
-                  recvbuf=recvbuf, source=bottom_src, sendtag = 99, recvtag = 98)
+        comm.Sendrecv(sendbuf=self.f[:, :, 1].copy(), dest=bottom_address,
+                  recvbuf=recvbuf, source=from_top)
         self.f[:, :, 0] = recvbuf
         # Send to top
         recvbuf = self.f[:, :, -1].copy()
-        comm.Sendrecv(self.f[:, :, -2].copy(), top_dst,
-                  recvbuf=recvbuf, source=top_src, sendtag = 98, recvtag = 99)
+        comm.Sendrecv(sendbuf=self.f[:, :, -2].copy(), dest=top_address,
+                  recvbuf=recvbuf, source=from_bottom)
         self.f[:, :, -1] = recvbuf
 
     def _pre_stream_boundaries(self) -> None:

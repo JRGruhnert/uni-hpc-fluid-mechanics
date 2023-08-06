@@ -181,7 +181,7 @@ class Plotter5:
         #print("velocities y: " + str(velocities_y))
         self.ax.cla()
         #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
-        self.ax.streamplot(self.x, self.y, velocities_x, velocities_y, cmap='RdBu_r', density=0.8)
+        self.ax.streamplot(self.x, self.y, velocities_x.T, velocities_y.T, cmap='RdBu_r', density=0.8)
         #self.ax.legend(['Analytical'])
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('x')
