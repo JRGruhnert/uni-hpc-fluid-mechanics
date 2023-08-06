@@ -60,8 +60,8 @@ class MpiWrapper():
             self.ny_local_without_buffer = slice(1, self.ny_local_buffered + 2)
             self.ny_local_buffered += 2
 
-        #print("Rank: {}, left_src: {}, right_src: {}, bottom_src: {}, top_src: {}".format(self._rank, self.from_right, self.from_left, self.from_top, self.from_bottom))
-        #print("Rank: {}, left_dst: {}, right_dst: {}, bottom_dst: {}, top_dst: {}".format(self._rank, self.left_address, self.right_address, self.bottom_address, self.top_address))
+        print("Rank: {}, left_src: {}, right_src: {}, bottom_src: {}, top_src: {}".format(self._rank, self.from_left, self.from_right, self.from_bottom, self.from_top))
+        print("Rank: {}, left_dst: {}, right_dst: {}, bottom_dst: {}, top_dst: {}".format(self._rank, self.left_address, self.right_address, self.bottom_address, self.top_address))
         #print("Rank: {}, x buffer: {}, y buffer: {}".format(self._rank, self.nx_local_buffered, self.ny_local_buffered))
         #print("Rank: {}, x without buffer: {}, y without buffer: {}".format(self._rank, self.nx_local_without_buffer, self.ny_local_without_buffer))
         mpix, mpiy = self._cart_comm.Get_coords(self._rank)
