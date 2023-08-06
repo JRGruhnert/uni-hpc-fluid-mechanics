@@ -40,25 +40,25 @@ class MpiWrapper():
 
         if self.right_address < 0:# This is the rightmost MPI process
             self.nx_local_buffered = nx_global - self.nx_local_buffered*(self.nx_worker_dim-1)
-            self.nx_local_without_buffer = slice(1, self.nx_local_buffered)
-            self.nx_local_buffered += 2
-        elif self.left_address < 0: # This is the leftmost MPI process
+            self.nx_local_without_buffer = slice(1, self.nx_local_buffered + 1)
             self.nx_local_buffered += 1
+        elif self.left_address < 0: # This is the leftmost MPI process
             self.nx_local_without_buffer = slice(0, self.nx_local_buffered)
+            self.nx_local_buffered += 1
         else:
+            self.nx_local_without_buffer = slice(1, self.nx_local_buffered + 2)
             self.nx_local_buffered += 2
-            self.nx_local_without_buffer = slice(1, self.nx_local_buffered)
 
         if self.top_address < 0:# This is the topmost MPI process
             self.ny_local_buffered = ny_global - self.ny_local_buffered*(self.ny_worker_dim-1)
-            self.ny_local_without_buffer = slice(1, self.ny_local_buffered)
-            self.ny_local_buffered += 2
-        elif self.bottom_address < 0: # This is the leftmost MPI process
+            self.ny_local_without_buffer = slice(1, self.ny_local_buffered + 1)
             self.ny_local_buffered += 1
+        elif self.bottom_address < 0: # This is the leftmost MPI process
             self.ny_local_without_buffer = slice(0, self.ny_local_buffered)
+            self.ny_local_buffered += 1
         else:
+            self.ny_local_without_buffer = slice(1, self.ny_local_buffered + 2)
             self.ny_local_buffered += 2
-            self.ny_local_without_buffer = slice(1, self.ny_local_buffered)
 
         #print("Rank: {}, left_src: {}, right_src: {}, bottom_src: {}, top_src: {}".format(self._rank, self.from_right, self.from_left, self.from_top, self.from_bottom))
         #print("Rank: {}, left_dst: {}, right_dst: {}, bottom_dst: {}, top_dst: {}".format(self._rank, self.left_address, self.right_address, self.bottom_address, self.top_address))
