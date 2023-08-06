@@ -39,25 +39,26 @@ class MpiWrapper():
         if self.right_dst < 0:
             # This is the rightmost MPI process
             self.nx_local_buffered = nx_global - self.nx_local_buffered*(self.nx_worker_dim-1)
-        self.without_ghosts_x = slice(0, self.nx_local_buffered)
+        self.nx_local_without_buffer = slice(0, self.nx_local_buffered)
         if self.right_dst >= 0:
             # Add ghost cell
             self.nx_local_buffered += 1
         if self.left_dst >= 0:
             # Add ghost cell
             self.nx_local_buffered += 1
-            self.without_ghosts_x = slice(1, self.nx_local_buffered+1)
+            self.nx_local_without_buffer = slice(1, self.nx_local_buffered)
+            
         if self.top_dst < 0:
             # This is the topmost MPI process
             self.ny_local_buffered = ny_global - self.ny_local_buffered*(self.ny_worker_dim-1)
-        self.without_ghosts_y = slice(0, self.ny_local_buffered)
+        self.ny_local_without_buffer = slice(0, self.ny_local_buffered)
         if self.top_dst >= 0:
             # Add ghost cell
             self.ny_local_buffered += 1
         if self.bottom_dst >= 0:
             # Add ghost cell
             self.ny_local_buffered += 1
-            self.without_ghosts_y = slice(1, self.ny_local_buffered+1)
+            self.ny_local_without_buffer = slice(1, self.ny_local_buffered)
 
         mpix, mpiy = self._cart_comm.Get_coords(self._rank)
         #print('Rank {} has domain coordinates {}x{} and a local grid of size {}x{} (including ghost cells).'.format(self._rank, mpix, mpiy, self.local_nx - 1, self.local_ny - 1))
@@ -65,8 +66,8 @@ class MpiWrapper():
         velocities = np.zeros((2, self.nx_local_buffered, self.ny_local_buffered))
         print("Rho shape: {}".format(rho.shape))
         print("Velocities shape: {}".format(velocities.shape))
-        print("Without ghosts x: {}".format(self.without_ghosts_x))
-        print("Without ghosts y: {}".format(self.without_ghosts_y))
+        print("Without ghosts x: {}".format(self.nx_local_without_buffer))
+        print("Without ghosts y: {}".format(self.ny_local_without_buffer))
         wall_velocity = 0.05
         omega = 1.7
         boundaries = [TopMovingWall("top", wall_velocity), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
@@ -88,7 +89,7 @@ class MpiWrapper():
         os.makedirs(src_path, exist_ok=True)
         filename = os.path.join(src_path, filename)
         
-        local_velocities = self.lattice.velocities[index, self.without_ghosts_x, self.without_ghosts_y]
+        local_velocities = self.lattice.velocities[index, self.nx_local_without_buffer, self.ny_local_without_buffer]
         print("Local velocities shape: {}".format(local_velocities.shape))
         nx_local = local_velocities.shape[0]
         ny_local = local_velocities.shape[1]

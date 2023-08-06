@@ -26,25 +26,25 @@ class LatticeBoltzmann():
                     bottom_src, bottom_dst, 
                     top_src, top_dst) -> None:
         # Send to left
-        recvbuf = self.f[:, -1, :].copy()
-        comm.Sendrecv(self.f[:, 1, :].copy(), left_dst,
-                  recvbuf=recvbuf, source=left_src)
-        self.f[:, -1, :] = recvbuf
-        # Send to right
         recvbuf = self.f[:, 0, :].copy()
-        comm.Sendrecv(self.f[:, -2, :].copy(), right_dst,
-                  recvbuf=recvbuf, source=right_src)
+        comm.Sendrecv(self.f[:, 1, :].copy(), left_dst,
+                  recvbuf=recvbuf, source=left_src, sendtag = 11, recvtag = 12)
         self.f[:, 0, :] = recvbuf
+        # Send to right
+        recvbuf = self.f[:, -1, :].copy()
+        comm.Sendrecv(self.f[:, -2, :].copy(), right_dst,
+                  recvbuf=recvbuf, source=right_src, sendtag = 12, recvtag = 11)
+        self.f[:, -1, :] = recvbuf
         # Send to bottom
-        recvbuf = self.f[:, :, -1].copy()
-        comm.Sendrecv(self.f[:, :, 1].copy(), bottom_dst,
-                  recvbuf=recvbuf, source=bottom_src)
-        self.f[:, :, -1] = recvbuf
-        # Send to top
         recvbuf = self.f[:, :, 0].copy()
-        comm.Sendrecv(self.f[:, :, -2].copy(), top_dst,
-                  recvbuf=recvbuf, source=top_src)
+        comm.Sendrecv(self.f[:, :, 1].copy(), bottom_dst,
+                  recvbuf=recvbuf, source=bottom_src, sendtag = 99, recvtag = 98)
         self.f[:, :, 0] = recvbuf
+        # Send to top
+        recvbuf = self.f[:, :, -1].copy()
+        comm.Sendrecv(self.f[:, :, -2].copy(), top_dst,
+                  recvbuf=recvbuf, source=top_src, sendtag = 98, recvtag = 99)
+        self.f[:, :, -1] = recvbuf
 
     def _pre_stream_boundaries(self) -> None:
         '''Bounce back particles from a wall'''
