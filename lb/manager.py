@@ -18,19 +18,10 @@ class MpiWrapper():
         if self._workers != self.nx_worker_dim * self.ny_worker_dim:
             raise ValueError("Number of processes does not match the grid dimensions.")
         
-        #print("Rank: {}".format(self._rank))
-        #print("Workers: {}".format(self._workers))
-        #print("Worker grid x: {}".format(self.worker_dim_x))
-        #print("Worker grid y: {}".format(self.worker_dim_y))
         self._cart_comm = self._comm.Create_cart((self.nx_worker_dim, self.ny_worker_dim), periods=(False, False), reorder=False)
-        
-        #assert self._workers > worker_grid_x * worker_grid_y #max size
-        print("Topologies: {}".format(self._cart_comm.Get_topo()))
-        print("Coords{} and rank {}".format(self._cart_comm.Get_coords(self._rank), self._rank))
-        self.from_right, self.left_address = self._cart_comm.Shift(0, -1)
-        self.from_left, self.right_address = self._cart_comm.Shift(0, 1)
-        self.from_top, self.bottom_address = self._cart_comm.Shift(1, -1)
-        self.from_bottom, self.top_address = self._cart_comm.Shift(1, 1)
+
+        self.left_address, self.right_address = self._cart_comm.Shift(0, 1)
+        self.bottom_address, self.top_address = self._cart_comm.Shift(1, 1)
         
         self.nx_local_buffered = nx_global//self.nx_worker_dim
         self.ny_local_buffered = ny_global//self.ny_worker_dim
@@ -60,18 +51,9 @@ class MpiWrapper():
             self.ny_local_without_buffer = slice(1, self.ny_local_buffered + 2)
             self.ny_local_buffered += 2
 
-        print("Rank: {}, left_src: {}, right_src: {}, bottom_src: {}, top_src: {}".format(self._rank, self.from_left, self.from_right, self.from_bottom, self.from_top))
-        print("Rank: {}, left_dst: {}, right_dst: {}, bottom_dst: {}, top_dst: {}".format(self._rank, self.left_address, self.right_address, self.bottom_address, self.top_address))
-        #print("Rank: {}, x buffer: {}, y buffer: {}".format(self._rank, self.nx_local_buffered, self.ny_local_buffered))
-        #print("Rank: {}, x without buffer: {}, y without buffer: {}".format(self._rank, self.nx_local_without_buffer, self.ny_local_without_buffer))
         mpix, mpiy = self._cart_comm.Get_coords(self._rank)
-        #print("Rank: {}, coords: {}, {}".format(self._rank, mpix, mpiy))
         rho = np.ones((self.nx_local_buffered, self.ny_local_buffered))
         velocities = np.zeros((2, self.nx_local_buffered, self.ny_local_buffered))
-        print("Rho shape: {}".format(rho.shape))
-        print("Velocities shape: {}".format(velocities.shape))
-        print("Without ghosts x: {}".format(self.nx_local_without_buffer))
-        print("Without ghosts y: {}".format(self.ny_local_without_buffer))
         wall_velocity = 0.05
         omega = 1.7
         boundaries = [TopMovingWall("top", wall_velocity), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
@@ -80,10 +62,8 @@ class MpiWrapper():
     def tick(self):
         self.lattice.tick()
         self.lattice.communicate(self._cart_comm, 
-                                 self.from_right, self.left_address, 
-                                 self.from_left, self.right_address, 
-                                 self.from_top, self.bottom_address, 
-                                 self.from_bottom, self.top_address)
+                                 self.left_address, self.right_address, 
+                                 self.bottom_address, self.top_address)
 
     def save_mpiio(self, filename, index):
         PATH = "results"
@@ -93,7 +73,6 @@ class MpiWrapper():
         filename = os.path.join(src_path, filename)
         
         local_velocities = self.lattice.velocities[index, self.nx_local_without_buffer, self.ny_local_without_buffer]
-        print("Local velocities shape: {}".format(local_velocities.shape))
         nx_local = local_velocities.shape[0]
         ny_local = local_velocities.shape[1]
 
