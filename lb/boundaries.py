@@ -71,7 +71,7 @@ class TopMovingWall(Boundary):
     def after(self, f):
         rho = np.sum(f[:, :, 0], axis=0)#self.density#lb.calculate_density(f[:, :, -1])
         factor = 2 * (1/self.cs) ** 2
-        momentum = factor * (C.astype(self.dtype) @ self.velocity) * (W.astype(self.dtype) * rho[:, None])
+        momentum = factor * (C @ self.velocity) * (W * rho[:, None])
         momentum = momentum[:, self.output_channels]
         f[self.input_channels, :, -1] = (self.f_cache[self.output_channels] - momentum.T)
 

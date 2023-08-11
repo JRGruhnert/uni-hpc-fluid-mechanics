@@ -18,7 +18,7 @@ class MpiWrapper():
         if self._workers != self.nx_worker_dim * self.ny_worker_dim:
             raise ValueError("Number of processes does not match the grid dimensions.")
         
-        self._cart_comm = self._comm.Create_cart((self.nx_worker_dim, self.ny_worker_dim), periods=(False, False), reorder=False)
+        self._cart_comm = self._comm.Create_cart((self.nx_worker_dim, self.ny_worker_dim), periods=(False, False))
 
         self.left_address, self.right_address = self._cart_comm.Shift(0, 1)
         self.bottom_address, self.top_address = self._cart_comm.Shift(1, 1)
@@ -26,8 +26,8 @@ class MpiWrapper():
         self.nx_local_buffered = nx_global//self.nx_worker_dim
         self.ny_local_buffered = ny_global//self.ny_worker_dim
         
-        self.nx_local_without_buffer = slice(1, self.nx_local_buffered-1)
-        self.ny_local_without_buffer = slice(1, self.ny_local_buffered-1)
+        self.nx_local_without_buffer = slice(0,0) #initialize with dummy values
+        self.ny_local_without_buffer = slice(0,0) #initialize with dummy values
 
         if self.right_address < 0:# This is the rightmost MPI process
             self.nx_local_buffered = nx_global - self.nx_local_buffered*(self.nx_worker_dim-1)
@@ -55,7 +55,7 @@ class MpiWrapper():
         rho = np.ones((self.nx_local_buffered, self.ny_local_buffered))
         velocities = np.zeros((2, self.nx_local_buffered, self.ny_local_buffered))
         wall_velocity = 0.05
-        omega = 1.7
+        omega = 0.3
         boundaries = [TopMovingWall("top", wall_velocity), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
         self.lattice = LatticeBoltzmann(rho, velocities, omega, boundaries)
     
@@ -113,6 +113,9 @@ class MpiWrapper():
         file.Close()
 
 
+    def get_velocities(self):
+        return self.lattice.velocities[:, self.nx_local_without_buffer, self.ny_local_without_buffer]
+    
     def save_velocities(self, x_velocities_file, y_velocities_file):
         self.save_mpiio(x_velocities_file, 0)
         self.save_mpiio(y_velocities_file, 1)

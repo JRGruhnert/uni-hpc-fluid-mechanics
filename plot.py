@@ -147,6 +147,7 @@ class Plotter4:
         self.ax.cla()
         #v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
         #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
+      
         self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], velocities.T[:, :, 1], cmap='RdBu_r', density=0.8)
         #self.ax.legend(['Analytical'])
         self.ax.set_ylabel('y')

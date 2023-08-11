@@ -1,4 +1,4 @@
 from .lattice_boltzmann import *
-from .manager import *
+from .mpi_wrapper import *
 from .boundaries import *
 from .vars import *

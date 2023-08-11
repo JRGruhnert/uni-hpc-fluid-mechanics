@@ -77,12 +77,12 @@ def calculate_density(f: np.ndarray) -> np.ndarray:
 
 def calculate_velocity_field(f: np.ndarray, rho: np.ndarray, dtype: np.dtype) -> np.ndarray:
     '''Calculate the velocity field for a given density and distribution function'''
-    return np.dot(f.T, C.astype(dtype)).T / rho
+    return np.dot(f.T, C).T / rho
 
 def calculate_equilibrium(rho: np.ndarray, velocities: np.ndarray, dtype: np.dtype) -> np.ndarray:
     '''Calculate the equilibrium distribution function for a given density and velocity field'''
-    test1 = np.dot(velocities.T, (C.T).astype(dtype)).T
+    test1 = np.dot(velocities.T, C.T).T
     test2 = np.sum(velocities**2, axis=0)
-    return (W.astype(dtype) * (rho * (1 + 3 * test1 + 4.5 * test1**2 - 1.5 * test2)).T).T
+    return (W * (rho * (1 + 3 * test1 + 4.5 * test1**2 - 1.5 * test2)).T).T
         
     
