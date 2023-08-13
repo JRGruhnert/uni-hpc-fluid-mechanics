@@ -58,8 +58,8 @@ def run_sliding_lid_mpi_sim(args):
 
 
 parser = argparse.ArgumentParser(prog='Lattice Boltzmann Method', description='Can run different LBM simulations')
-parser.add_argument('-nx', '--nx', type=int, help='Number of lattice points in x direction', default=300)
-parser.add_argument('-ny', '--ny', type=int, help='Number of lattice points in y direction', default=300)
+parser.add_argument('-nx', '--nx', type=int, help='Number of lattice points in x direction', default=100)
+parser.add_argument('-ny', '--ny', type=int, help='Number of lattice points in y direction', default=50)
 parser.add_argument('-ts', '--total_steps', type=int, help='Total number of steps', required=True)
 parser.add_argument('-ps', '--plot_every', type=int, help='Plot every n steps', required=True)
 parser.add_argument('-out', '--output_dir', type=str, help='Output directory', default='results')
@@ -86,9 +86,9 @@ couette_flow_parser.add_argument('-wv', '--wall_velocity', type=float, help='Vel
 couette_flow_parser.set_defaults(func=run_couette_flow_sim)
 
 poiseuille_flow_parser = sub_parser.add_parser('poiseuille_flow', help='poiseuille_flow help')
-poiseuille_flow_parser.add_argument('-o', '--omega', type=float, help='Omega', default=1.0)
-poiseuille_flow_parser.add_argument('-pl', '--pressure_left', type=float, default=1.002, help='Pressure on the left')
-poiseuille_flow_parser.add_argument('-pr', '--pressure_right', type=float, default=1.0, help='Pressure on the right')
+poiseuille_flow_parser.add_argument('-o', '--omega', type=float, help='Omega', default=0.3)
+poiseuille_flow_parser.add_argument('-pl', '--pressure_left', type=float, default=3.1, help='Pressure on the left')
+poiseuille_flow_parser.add_argument('-pr', '--pressure_right', type=float, default=3.0, help='Pressure on the right')
 poiseuille_flow_parser.set_defaults(func=run_poiseuille_flow_sim)
     
 sliding_lid_parser = sub_parser.add_parser('sliding_lid', help='sliding_lid help')

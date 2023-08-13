@@ -24,13 +24,13 @@ class Boundary(ABC):
     def pre(self, f):
         """Called before the streaming to cache boundary conditions."""
         if (self.placement == 'top'):
-            self.f_cache = f[:, :, -1].copy()
+            self.f_cache = f[:, :, -1]
         elif (self.placement == 'bottom'):
-            self.f_cache = f[:, :, 0].copy()
+            self.f_cache = f[:, :, 0]
         elif (self.placement == 'left'):
-            self.f_cache = f[:, 0, :].copy()
+            self.f_cache = f[:, 0, :]
         elif (self.placement == 'right'):
-            self.f_cache = f[:, -1, :].copy()
+            self.f_cache = f[:, -1, :]
         else:
             raise ValueError("Invalid placement: {}".format(self.placement))
 
@@ -73,7 +73,7 @@ class TopMovingWall(Boundary):
         momentum = momentum[:, self.output_channels]
         f[self.input_channels, :, -1] = (self.f_cache[self.output_channels] - momentum.T)
 
-class PortalWall(Boundary):
+class Periodic(Boundary):
     def __init__(self, placement, n, pressure):
         #only horizontal implementation
         if (placement == 'top' or placement == 'bottom'):
