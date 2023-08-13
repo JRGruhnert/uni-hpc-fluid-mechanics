@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 import numpy as np
-import lb
-from lb.vars import C, W
+from lb.helper import calculate_equilibrium
+from lb.vars import C, CS, W
 
 class Boundary(ABC):
     def __init__(self, placement):
@@ -59,39 +59,37 @@ class RigidWall(Boundary):
 
 
 class TopMovingWall(Boundary):
-    def __init__(self, placement, velocity, cs=1/np.sqrt(3)):
+    def __init__(self, placement, wv):
         #only horizontal implementation
         if (placement == 'bottom' or placement == 'left' or placement == 'right'):
             raise ValueError("Invalid placement: {}".format(self.placement))
         super().__init__(placement)
-        self.velocity = [velocity, 0.0]
-        self.cs = cs
+        self.velocity = [wv, 0.0]
     
     def after(self, f):
         rho = np.sum(f[:, :, 0], axis=0)
-        factor = 2 * (1/self.cs) ** 2
+        factor = 2 * (1/CS) ** 2
         momentum = factor * (C @ self.velocity) * (W * rho[:, None])
         momentum = momentum[:, self.output_channels]
         f[self.input_channels, :, -1] = (self.f_cache[self.output_channels] - momentum.T)
 
 class PortalWall(Boundary):
-    def __init__(self, placement, n, pressure, cs=1/np.sqrt(3)):
+    def __init__(self, placement, n, pressure):
         #only horizontal implementation
         if (placement == 'top' or placement == 'bottom'):
             raise ValueError("Invalid placement: {}".format(self.placement))
         super().__init__(placement)
-        self.pressure = pressure / cs**2
-        self.cs = cs
+        self.pressure = pressure / CS**2
         self.n = n
 
     def pre(self, f, f_eq, velocities):
         if (self.placement == 'left'):
-            temp_feq = lb.calculate_equilibrium(
+            temp_feq = calculate_equilibrium(
                 np.full(self.n, self.pressure),
                 velocities[:, -2, :]).squeeze()
             f[:, 0, :] = temp_feq + (f[:, -2, :] - f_eq[:, -2, :])
         else:
-            temp_feq = lb.calculate_equilibrium(
+            temp_feq = calculate_equilibrium(
                 np.full(self.n, self.pressure),
                 velocities[:, 1, :]).squeeze()
             f[:, -1, :] = temp_feq + (f[:, 1, :] - f_eq[:, 1, :])

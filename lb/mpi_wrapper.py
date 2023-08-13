@@ -1,5 +1,5 @@
 import os
-from mpi4py import MPI
+#from mpi4py import MPI
 import numpy as np
 from numpy.lib.format import dtype_to_descr, magic
 from lb.boundaries import RigidWall, TopMovingWall

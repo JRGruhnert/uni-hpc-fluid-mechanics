@@ -5,7 +5,7 @@ def sliding_lid_sim_mpi(nx: int, ny: int, total_steps: int, plot_every: int, out
     
     manager = MpiWrapper(nx, ny, 2, 2)
 
-    plotter = Plotter5(nx, ny, output_dir)
+    plotter = Plotter5(nx, ny, "sliding_lid", "mpi_raw",output_dir)
 
     for(step) in range(total_steps):
         manager.tick()

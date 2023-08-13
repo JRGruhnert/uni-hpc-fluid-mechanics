@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import os
 from matplotlib import pyplot as plt
 import matplotlib as mpl
@@ -5,81 +6,86 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy.signal import argrelextrema
 
-PATH = "results"
-COLORS = ["orange", "blue"]
-ANALYTIC = 0
-SIMULATION = 1
-VELOCITY = 2
-DENSITY = 3
+from lb.vars import CS
 
-class Plotter:
-    def __init__(self):
+class Plotter(ABC):
+    def __init__(self, nx, ny, total_steps, experiment, path):
         self.fig, self.ax = plt.subplots()
-        self.quantities = []
-
-        self.path = os.path.join(PATH, 'shear_wave_decay')
-        self.density_path = os.path.join(self.path, 'density')
-        self.velocity_path = os.path.join(self.path, 'velocity')
+        self.nx = nx
+        self.ny = ny
+        self.total_steps = total_steps
+        self.experiment = experiment
+        
+        self.path = os.path.join(path, experiment)
         os.makedirs(self.path, exist_ok=True)
-        os.makedirs(self.density_path, exist_ok=True)
-        os.makedirs(self.velocity_path, exist_ok=True)
+        
+    @abstractmethod
+    def plot(self):
+        pass
+    
+        
+class ShearWavePlotter(Plotter):
+    def __init__(self, nx, ny, total_steps, path, sub_experiment, p0, epsilon, omega):
+        super().__init__(nx, ny, total_steps, "shear_wave_decay/" + sub_experiment, path)
+        self.quantities = []
+        self.sub_experiment = sub_experiment
+        self.p0 = p0
+        self.epsilon = epsilon
+        self.omega = omega
 
-    def gather_quantities(self, velocities, rho, p0, experiment):
-        if experiment == "density":
-            self.quantities.append(np.max(np.abs(rho - p0)))
+    def gather_quantities(self, velocities, rho):
+        if self.sub_experiment == "density":
+            self.quantities.append(np.max(np.abs(rho - self.p0)))
         else:
             self.quantities.append(np.max(np.abs(velocities[0, :, :])))
 
-    def plot_shear_wave(self, velocities, rho, p0, step, epsilon, nx, ny, experiment):
-        if experiment == "density":
+    def plot(self, velocities, rho, step):
+        if self.sub_experiment == "density":
             self.ax.cla()
-            self.ax.set_ylim([-epsilon + p0, epsilon + p0])
-            self.ax.plot(np.arange(nx), rho[:, ny//2], '.', color=COLORS[SIMULATION])
+            self.ax.set_ylim([-self.epsilon + self.p0, self.epsilon + self.p0])
+            self.ax.plot(np.arange(self.nx), rho[:, self.ny//2], '.')
             self.ax.set_xlabel('x')
             self.ax.set_ylabel('density')
             save_path = os.path.join(
-                self.density_path, f'density_decay_{step}.png')
+                self.path, f'density_decay_{step}.png')
             self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
         else:
             self.ax.cla()
-            self.ax.set_ylim([-epsilon, epsilon])
-            self.ax.plot(np.arange(ny), velocities[0, nx//2, :], '.', color=COLORS[SIMULATION])
+            self.ax.set_ylim([-self.epsilon, self.epsilon])
+            self.ax.plot(np.arange(self.ny), velocities[0, self.nx//2, :], '.')
             self.ax.set_xlabel('y')
             self.ax.set_ylabel('velocity')
             save_path = os.path.join(
-                self.velocity_path, f'shear_wave_{step}.png')
+                self.path, f'shear_wave_{step}.png')
             self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
-    def return_viscosity(self, x, nx, epsilon, omega, steps, experiment):
-        if experiment == 'density':
+    def return_viscosity(self, steps):
+        if self.sub_experiment == 'density':
             self.quantities = np.array(self.quantities)
             x = argrelextrema(self.quantities, np.greater)[0]
             self.quantities = self.quantities[x]
         else:
             x = np.arange(steps)
 
-        coef = 2 * np.pi / nx
+        coef = 2 * np.pi / self.nx
         simulated_viscosity = curve_fit(
-            lambda t, visc: epsilon * np.exp(-visc * t * coef ** 2), xdata=x, ydata=self.quantities)[0][0]
-        analytical_viscosity = (1/3) * ((1/omega) - 0.5)
+            lambda t, visc: self.epsilon * np.exp(-visc * t * coef ** 2), xdata=x, ydata=self.quantities)[0][0]
+        analytical_viscosity = (1/3) * ((1/self.omega) - 0.5)
 
         return simulated_viscosity, analytical_viscosity
 
 
-class Plotter2:
-    def __init__(self, nx, ny, steps, mod, wall_velocity):
-        padding_y = 0#0.5
-        padding_x = 0#0.002
-        self.fig, self.ax = plt.subplots()
-        self.path = os.path.join(PATH, 'cuette flow')
-        os.makedirs(self.path, exist_ok=True)
-        self.nx = nx
-        self.ny = ny
+class CouetteFlowPlotter(Plotter):
+    def __init__(self, nx, ny, steps, plot_every, path , wall_velocity):
+        super().__init__(nx, ny, steps, "couette_flow", path)
+        self.padding_y = 0#0.5
+        self.padding_x = 0#0.002
+       
         self.y = np.arange(ny)
-        print(self.y)
+    
         self.analytical = (self.y) / (ny-1) * wall_velocity
-        self.ax.set_xlim([-padding_x, wall_velocity + padding_x])
-        self.ax.set_ylim([-padding_y, ny - 1 + padding_y])
+        self.ax.set_xlim([-self.padding_x, wall_velocity + self.padding_x])
+        self.ax.set_ylim([-self.padding_y, ny - 1 + self.padding_y])
         self.ax.set_ylabel('y position')
         self.ax.set_xlabel(f'Velocity $v_x$(x = {self.nx//2}, y)')
         # Seitenverhältnis einstellen
@@ -87,15 +93,13 @@ class Plotter2:
         self.ax.set_aspect(ratio)
 
         # colorbar settings
-        self.steps = steps
-        self.mod = mod
-        self.n_lines = steps // mod
+        self.n_lines = steps // plot_every
         self.help_arr = []
         self.norm = mpl.colors.Normalize(vmin=0, vmax=steps)
         self.cmap = mpl.cm.ScalarMappable(norm=self.norm, cmap='cividis')
         self.cmap.set_array([])
 
-    def plot_cuette_flow(self, step, velocities):
+    def plot(self, step, velocities):
         if step == 0 or step == (self.steps - 1):
             self.help_arr.append(step)
 
@@ -111,26 +115,26 @@ class Plotter2:
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 
-class Plotter3:
-    def __init__(self):
-        self.fig, self.ax = plt.subplots()
+class PoiseuilleFlowPlotter(Plotter):
+    def __init__(self, nx, ny, total_steps, path, omega, pressure_in, pressure_out):
+        super().__init__(nx, ny, total_steps, "poiseuille_flow", path)
+        self.omega = omega
+        self.pressure_in = pressure_in
+        self.pressure_out = pressure_out
 
-        self.path = os.path.join(PATH, 'poiseuille flow')
-        os.makedirs(self.path, exist_ok=True)
-
-    def plot_poiseuille_flow(self, rho, velocities, omega, pressure_in, pressure_out, step, nx, ny):
-        y = np.arange(ny)
+    def plot(self, rho, velocities, step):
+        y = np.arange(self.ny)
         self.ax.cla()
-        viscosity = 1/3 * (1/omega - 0.5)
-        dynamic_viscosity = rho[nx//2, :] * viscosity
-        partial_derivative = (pressure_out - pressure_in) / nx
+        viscosity = 1/3 * (1/self.omega - 0.5)
+        dynamic_viscosity = rho[self.nx//2, :] * viscosity
+        partial_derivative = CS**2 * (self.pressure_out - self.pressure_in) / self.nx
         analytical = (-0.5 * partial_derivative * y *
-                      (ny - 1 - y)) / dynamic_viscosity
+                      (self.ny - 1 - y)) / dynamic_viscosity
         
 
         # ax.set_xlim([0, np.max(analytical) + 0.001])
-        self.ax.plot(analytical, y, COLORS[ANALYTIC])
-        self.ax.plot(velocities[0, nx//2, :], y, '.', COLORS[SIMULATION])
+        self.ax.plot(analytical, y)
+        self.ax.plot(velocities[0, self.nx//2, :], y, '.')
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('velocity')
         self.ax.legend(['Analytical','Simulated'])
@@ -138,23 +142,16 @@ class Plotter3:
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 
-class Plotter4:
-    def __init__(self, nx, ny, experiment='sliding_lid/sequential'):
-        self.path = os.path.join(PATH, experiment)
-        os.makedirs(self.path, exist_ok=True)
-        self.experiment = experiment
+class SlidingLidPlotter(Plotter):
+    def __init__(self, nx, ny, total_steps, path):
+        super().__init__(nx, ny, total_steps, "sliding_lid/sequential", path)
 
         self.padding_y = 10
-        self.padding_x = 10
-        self.nx = nx
-        self.ny = ny
-        self.fig, self.ax = plt.subplots()
-        
+        self.padding_x = 10  
         self.x, self.y = np.meshgrid(np.arange(nx), np.arange(ny))
-        self.ax.margins(0.05) 
         
 
-    def plot_sliding_lid(self, velocities, step):
+    def plot(self, velocities, step):
         self.ax.cla()
         speed = np.sqrt(velocities.T[self.y, self.x, 0] * velocities.T[self.y, self.x, 0] + velocities.T[self.y, self.x, 1]  * velocities.T[self.y, self.x, 1] )
         self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], velocities.T[:, :, 1], color=speed, cmap='RdBu_r')
@@ -168,7 +165,7 @@ class Plotter4:
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 class Plotter5:
-    def __init__(self, nx, ny, experiment='sliding_lid/parallel', source='sliding_lid/mpi_raw'):
+    def __init__(self, nx, ny, experiment, source, path):
         padding_y = 0.5
         padding_x = 0.002
         self.fig, self.ax = plt.subplots()
@@ -177,9 +174,9 @@ class Plotter5:
         self.ax.set_xlim([0, nx])
         self.ax.set_ylim([0, ny])
         self.x, self.y = np.meshgrid(np.arange(nx), np.arange(ny))
-        self.path = os.path.join(PATH, experiment)
+        self.path = os.path.join(path, experiment)
         os.makedirs(self.path, exist_ok=True)
-        self.src_path = os.path.join(PATH, source)
+        self.src_path = os.path.join(path, source)
         os.makedirs(self.src_path, exist_ok=True)
 
     def plot_sliding_lid_mpi(self, step, x_velocities_file, y_velocities_file):
