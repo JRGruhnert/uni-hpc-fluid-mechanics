@@ -1,16 +1,13 @@
-import os
-from matplotlib import pyplot as plt
 import numpy as np
-from lb import LatticeBoltzmann
-from plot import Plotter
+from lb.lattice_boltzmann import LatticeBoltzmann
+from visualisation.plot import Plotter
 
-def shear_wave_sim(experiment, viscosity = False, nx: int = 100, ny: int = 50, omega: float = 0.3, epsilon: float = 0.01,
-                          steps: int = 2000, p0: float = 1.0):
+def shear_wave_sim(nx: int, ny: int, total_steps: int, plot_every: int, output_dir: str, 
+                   omega: float, epsilon: float, p0: float, experiment: str, viscosity: bool):
 
     rho = None
     velocities = None
     x, y = np.meshgrid(np.arange(nx), np.arange(ny))
-
 
     if(experiment == "density"):
        # shear wave experiment 1 (density)
@@ -26,9 +23,9 @@ def shear_wave_sim(experiment, viscosity = False, nx: int = 100, ny: int = 50, o
         return
 
     latticeBoltzmann = LatticeBoltzmann(rho, velocities, omega)
-    plotter = Plotter()
+    plotter = Plotter(nx, ny, output_dir)
 
-    for(step) in range(steps):
+    for(step) in range(total_steps):
         # update the lattice
         latticeBoltzmann.tick()  
 
@@ -39,16 +36,15 @@ def shear_wave_sim(experiment, viscosity = False, nx: int = 100, ny: int = 50, o
         if viscosity: plotter.gather_quantities(velocities, rho, p0, experiment)
 
         # plot shear wave every 200 steps 
-        if((step % 200 == 0) and (not viscosity)):
-            plotter.plot_shear_wave(velocities, rho, p0, step, epsilon, nx, ny, experiment)
+        if((step % plot_every == 0) and (not viscosity)):
+            plotter.plot_shear_wave(velocities, rho, p0, step, epsilon, experiment)
             print("Step: {}".format(step))
 
     # return the viscosity
-    return plotter.return_viscosity(x, nx, epsilon, omega, steps, experiment) if viscosity else None
+    return plotter.return_viscosity(x, nx, epsilon, omega, total_steps, experiment) if viscosity else None
     
-
+'''
 # Experiments setup
-#omegas = np.linspace(1e-6, 2 - 1e-6, 20 + 1)[1:]
 omegas = np.arange(0.1, 2.01, 0.1)  
 common_path = os.path.join('results', 'shear_wave_decay')
 vis_path = os.path.join(common_path, 'viscosity')
@@ -93,4 +89,4 @@ plt.yscale('log')
 plt.ylabel('Log(Viscosity)')
 plt.legend(['Simulated', 'Analytical'])
 plt.savefig(velocity_path, bbox_inches='tight', pad_inches=0)
-   
+   '''

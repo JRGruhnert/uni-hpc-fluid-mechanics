@@ -3,13 +3,12 @@ from lb.boundaries import Boundary, PortalWall
 from lb.vars import C, W
 
 class LatticeBoltzmann():
-    def __init__(self, rho: np.ndarray, velocities: np.ndarray, omega: float, boundaries: list[Boundary] = [], dtype: np.dtype = np.float32) -> None:
-        self.dtype = dtype
-        self.rho = rho.astype(self.dtype)
-        self.velocities = velocities.astype(self.dtype)
+    def __init__(self, rho: np.ndarray, velocities: np.ndarray, omega: float, boundaries: list[Boundary] = []) -> None:
+        self.rho = rho
+        self.velocities = velocities
         self.omega = omega
         self.boundaries = boundaries
-        self.f = calculate_equilibrium(self.rho, self.velocities, self.dtype)
+        self.f = calculate_equilibrium(self.rho, self.velocities)
         self.f_eq = self.f
         
 
@@ -65,8 +64,8 @@ class LatticeBoltzmann():
     def _collide(self) -> None:
         '''Collide particles'''
         self.rho = calculate_density(self.f)
-        self.velocities = calculate_velocity_field(self.f, self.rho, self.dtype)
-        self.f_eq = calculate_equilibrium(self.rho, self.velocities, self.dtype)
+        self.velocities = calculate_velocity_field(self.f, self.rho)
+        self.f_eq = calculate_equilibrium(self.rho, self.velocities)
         self.f += self.omega * (self.f_eq - self.f)
 
 # Helper functions to calculate density, velocity field, equilibrium
@@ -75,11 +74,11 @@ def calculate_density(f: np.ndarray) -> np.ndarray:
     '''Calculate the density for a given distribution function'''
     return np.sum(f, axis=0)
 
-def calculate_velocity_field(f: np.ndarray, rho: np.ndarray, dtype: np.dtype) -> np.ndarray:
+def calculate_velocity_field(f: np.ndarray, rho: np.ndarray) -> np.ndarray:
     '''Calculate the velocity field for a given density and distribution function'''
     return np.dot(f.T, C).T / rho
 
-def calculate_equilibrium(rho: np.ndarray, velocities: np.ndarray, dtype: np.dtype) -> np.ndarray:
+def calculate_equilibrium(rho: np.ndarray, velocities: np.ndarray) -> np.ndarray:
     '''Calculate the equilibrium distribution function for a given density and velocity field'''
     test1 = np.dot(velocities.T, C.T).T
     test2 = np.sum(velocities**2, axis=0)

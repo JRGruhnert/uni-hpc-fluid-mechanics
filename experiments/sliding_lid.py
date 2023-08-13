@@ -1,25 +1,24 @@
 import numpy as np
-from lb import LatticeBoltzmann, RigidWall, TopMovingWall
-from plot import Plotter4
+from lb.boundaries import TopMovingWall, RigidWall
+from lb.lattice_boltzmann import *
+from visualisation.plot import Plotter4
 
-def sliding_lid_sim(nx: int = 300, ny: int = 300, omega: float = 0.3, steps: int = 100001):
+def sliding_lid_sim(nx: int, ny: int, total_steps: int, plot_every: int, output_dir: str, reynolds: int, wall_velocity: float):
     
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
-    wall_velocity = 0.05
+    omega = 1 / (0.5 + ((wall_velocity * nx) / reynolds) / (1/3))
     boundaries = [TopMovingWall("top", wall_velocity), RigidWall("bottom"), RigidWall("left"), RigidWall("right")]
 
-    omega = 1 / (0.5 + ((wall_velocity * nx) / 1000) / (1/3))
-    
     latticeBoltzmann = LatticeBoltzmann(rho, velocities, omega, boundaries)
-    plotter = Plotter4(nx, ny)
+    plotter = Plotter4(nx, ny, output_dir)
 
-    for(step) in range(steps):
+    for(step) in range(total_steps):
+        # perform one step of the simulation
         latticeBoltzmann.tick()
         
         # plot sliding lid every 1000 steps 
-        if((step % 10000 == 0)):
+        if((step % plot_every == 0)):
             plotter.plot_sliding_lid(latticeBoltzmann.velocities, step)
             print("Step: {}".format(step))
 
-sliding_lid_sim()

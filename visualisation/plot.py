@@ -1,5 +1,6 @@
 import os
 from matplotlib import pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.signal import argrelextrema
@@ -10,10 +11,6 @@ ANALYTIC = 0
 SIMULATION = 1
 VELOCITY = 2
 DENSITY = 3
-
-plt.rcParams['mathtext.fontset'] = 'stix'  # The setting of math font
-#plt.style.use('ggplot')
-
 
 class Plotter:
     def __init__(self):
@@ -70,33 +67,47 @@ class Plotter:
 
 
 class Plotter2:
-    def __init__(self, nx, ny, wall_velocity):
-        padding_y = 0.5
-        padding_x = 0.002
-        self.lw_analytic = 2
-        self.lw_simulated = 2
+    def __init__(self, nx, ny, steps, mod, wall_velocity):
+        padding_y = 0#0.5
+        padding_x = 0#0.002
         self.fig, self.ax = plt.subplots()
         self.path = os.path.join(PATH, 'cuette flow')
         os.makedirs(self.path, exist_ok=True)
         self.nx = nx
         self.ny = ny
         self.y = np.arange(ny)
+        print(self.y)
         self.analytical = (self.y) / (ny-1) * wall_velocity
-        self.ax.set_xlim([0.0 - padding_x, wall_velocity + padding_x])
+        self.ax.set_xlim([-padding_x, wall_velocity + padding_x])
         self.ax.set_ylim([-padding_y, ny - 1 + padding_y])
-        self.ax.axhline(self.ny-1, linewidth=2, color='red')
-        self.ax.axhline(0.0, linewidth=2, color='black')
-        self.ax.set_ylabel('y position (lattice units')
-        self.ax.set_xlabel('Velocity u_x(x = 25, y)')
-        self.ax.legend(['Moving Wall', 'Rigid Wall', 
-                             'Analytical Velocity','Simulated Velocity'], loc='lower right')
+        self.ax.set_ylabel('y position')
+        self.ax.set_xlabel(f'Velocity $v_x$(x = {self.nx//2}, y)')
+        # Seitenverhältnis einstellen
+        ratio = abs((self.ax.get_xlim()[1] - self.ax.get_xlim()[0])/(self.ax.get_ylim()[0] - self.ax.get_ylim()[1])) * 0.75
+        self.ax.set_aspect(ratio)
 
-    def plot_cuette_flow(self, velocities):
-        self.ax.plot(velocities[0, self.nx//2, :], self.y, '.', markersize=self.lw_simulated)#, color=COLORS[SIMULATION])
+        # colorbar settings
+        self.steps = steps
+        self.mod = mod
+        self.n_lines = steps // mod
+        self.help_arr = []
+        self.norm = mpl.colors.Normalize(vmin=0, vmax=steps)
+        self.cmap = mpl.cm.ScalarMappable(norm=self.norm, cmap='cividis')
+        self.cmap.set_array([])
+
+    def plot_cuette_flow(self, step, velocities):
+        if step == 0 or step == (self.steps - 1):
+            self.help_arr.append(step)
+
+        self.ax.plot(velocities[0, self.nx//2, :], self.y, c=self.cmap.to_rgba(step + 1))#, color=COLORS[SIMULATION])
 
     def save(self, step):
-        self.ax.plot(self.analytical, self.y, lw=self.lw_analytic)#, color=COLORS[ANALYTIC])
+        self.ax.plot(self.analytical, self.y, linestyle='dashed', c='darkred', label="Analytical Velocity")#, color=COLORS[ANALYTIC])
+        self.ax.axhline(self.ny-1, linewidth=2, color='red', label='Moving Wall')
+        self.ax.axhline(0.0, linewidth=2, color='black', label='Rigid Wall')
         save_path = os.path.join(self.path, f'couette_flow_{step}')
+        self.ax.legend()  # add legend
+        self.fig.colorbar(self.cmap, ticks=self.help_arr, label='Time Step', orientation='vertical')  # add colorbar
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 
@@ -116,10 +127,6 @@ class Plotter3:
         analytical = (-0.5 * partial_derivative * y *
                       (ny - 1 - y)) / dynamic_viscosity
         
-        #shear_viscosity = (1 / omega - 0.5) / 3
-        #delta = 2.0 / nx / shear_viscosity / 2.
-        #y = np.linspace(0, ny, ny)
-        #analytical = delta * y * (ny - y) / 3.
 
         # ax.set_xlim([0, np.max(analytical) + 0.001])
         self.ax.plot(analytical, y, COLORS[ANALYTIC])
@@ -133,26 +140,30 @@ class Plotter3:
 
 class Plotter4:
     def __init__(self, nx, ny, experiment='sliding_lid/sequential'):
-        padding_y = 0.5
-        padding_x = 0.002
-        self.fig, self.ax = plt.subplots()
-        self.experiment = experiment
-        self.ax.set_xlim([0, nx])
-        self.ax.set_ylim([0, ny])
-        self.x, self.y = np.meshgrid(np.arange(nx), np.arange(ny))
         self.path = os.path.join(PATH, experiment)
         os.makedirs(self.path, exist_ok=True)
+        self.experiment = experiment
+
+        self.padding_y = 10
+        self.padding_x = 10
+        self.nx = nx
+        self.ny = ny
+        self.fig, self.ax = plt.subplots()
+        
+        self.x, self.y = np.meshgrid(np.arange(nx), np.arange(ny))
+        self.ax.margins(0.05) 
+        
 
     def plot_sliding_lid(self, velocities, step):
         self.ax.cla()
-        #v = np.sqrt(velocities.T[:, :, 0]**2 + velocities.T[:, :, 1]**2)
-        #self.ax.imshow(v, cmap='RdBu_r', vmin=0, interpolation='spline16')
-      
-        self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], velocities.T[:, :, 1], cmap='RdBu_r', density=0.8)
-        #self.ax.legend(['Analytical'])
-        self.ax.set_ylabel('y')
-        self.ax.set_xlabel('x')
-        self.ax.set_title(f'Step: {step}')
+        speed = np.sqrt(velocities.T[self.y, self.x, 0] * velocities.T[self.y, self.x, 0] + velocities.T[self.y, self.x, 1]  * velocities.T[self.y, self.x, 1] )
+        self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], velocities.T[:, :, 1], color=speed, cmap='RdBu_r')
+       
+        self.ax.set_xlim([0 - self.padding_x, self.nx + self.padding_x])
+        self.ax.set_ylim([0 - self.padding_y, self.ny + self.padding_y])
+        self.ax.set_ylabel('y-position')
+        self.ax.set_xlabel('x-position')
+        #self.ax.set_title(f'Step: {step}')
         save_path = os.path.join(self.path, f'{"sliding_lid"}_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 

@@ -4,9 +4,8 @@ import lb
 from lb.vars import C, W
 
 class Boundary(ABC):
-    def __init__(self, placement, dtype=np.float32):
+    def __init__(self, placement):
         self.placement = placement
-        self.dtype = dtype
         if (placement == 'top'):
             self.input_channels = np.array([4, 7, 8])
             self.output_channels = np.array([2, 5, 6])
@@ -69,7 +68,7 @@ class TopMovingWall(Boundary):
         self.cs = cs
     
     def after(self, f):
-        rho = np.sum(f[:, :, 0], axis=0)#self.density#lb.calculate_density(f[:, :, -1])
+        rho = np.sum(f[:, :, 0], axis=0)
         factor = 2 * (1/self.cs) ** 2
         momentum = factor * (C @ self.velocity) * (W * rho[:, None])
         momentum = momentum[:, self.output_channels]
