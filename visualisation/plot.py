@@ -100,7 +100,7 @@ class CouetteFlowPlotter(Plotter):
         self.cmap.set_array([])
 
     def plot(self, step, velocities):
-        if step == 0 or step == (self.steps - 1):
+        if step == 0 or step == (self.total_steps - 1):
             self.help_arr.append(step)
 
         self.ax.plot(velocities[0, self.nx//2, :], self.y, c=self.cmap.to_rgba(step + 1))#, color=COLORS[SIMULATION])
@@ -126,18 +126,19 @@ class PoiseuilleFlowPlotter(Plotter):
         y = np.arange(self.ny)
         self.ax.cla()
         viscosity = 1/3 * (1/self.omega - 0.5)
-        dynamic_viscosity = rho[self.nx//2, :] * viscosity
-        partial_derivative = CS**2 * (self.pressure_out - self.pressure_in) / self.nx
-        analytical = (-0.5 * partial_derivative * y *
-                      (self.ny - 1 - y)) / dynamic_viscosity
+        dynamic_viscosity = rho[(self.nx-2)//2, :] * viscosity
+        partial_derivative = (self.pressure_out - self.pressure_in) / (self.nx -2)
+        analytical = -1 / (2 * dynamic_viscosity) * partial_derivative * y * (self.ny - 1 - y)
         
-
-        # ax.set_xlim([0, np.max(analytical) + 0.001])
-        self.ax.plot(analytical, y)
-        self.ax.plot(velocities[0, self.nx//2, :], y, '.')
+        #self.ax.set_xlim([0, np.max(analytical) + 0.002])
+        self.ax.plot(analytical, y, linestyle='dashed', label="Analytical Velocity")
+        self.ax.plot(velocities[0, (self.nx-2)//2, :], y, label="Simulated Velocity")
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('velocity')
-        self.ax.legend(['Analytical','Simulated'])
+        # plot walls
+        self.ax.axhline(0, c='black', linewidth=3.5, label="Rigid Wall")  # indicate rigid bottom wall
+        self.ax.axhline(self.ny-1, c='black', linewidth=3.5)  # indicate rigid bottom wall
+        self.ax.legend()
         save_path = os.path.join(self.path, f'pousielle_flow_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
