@@ -32,6 +32,7 @@ class ShearWavePlotter(Plotter):
         self.p0 = p0
         self.epsilon = epsilon
         self.omega = omega
+        self.padding_y = epsilon * 1.1
 
     def gather_quantities(self, velocities, rho):
         if self.sub_experiment == "density":
@@ -39,52 +40,53 @@ class ShearWavePlotter(Plotter):
         else:
             self.quantities.append(np.max(np.abs(velocities[0, :, :])))
 
-    def calculate_analytical_sol(epsilon: float, viscosity: float, t: int, coordinates: np.ndarray, len_space: int):
+    def calculate_analytical_sol(self, epsilon: float, viscosity: float, t: int, coordinates: np.ndarray, len_space: int):
         return epsilon * np.exp(- viscosity * (2.0 * np.pi / len_space) ** 2 * t) * np.sin(
             2.0 * np.pi / len_space * coordinates)
 
     def plot(self, velocities, rho, step):
         if self.sub_experiment == "density":
             self.ax.cla()
-            self.ax.set_xlim([0, self.nx])
-            self.ax.set_ylim([self.p0 -self.epsilon, self.p0 + self.epsilon])
-            self.ax.plot(np.arange(self.nx), rho[:, self.ny//2], label='Simulated')
-            self.ax.set_xlabel('x-Position')
-            self.ax.set_ylabel(f'Density (x, y={self.ny // 2})')
-            self.ax.set_title(f'Step: {step}')
-            self.ax.legend()
+            self.ax.set_xlim([0, self.nx-1])
+            self.ax.set_ylim([self.p0 - self.padding_y, self.p0 + self.padding_y])
+            self.ax.plot(np.arange(self.nx), rho[:, self.ny//2])
+            self.ax.set_xlabel('x-position')
+            self.ax.set_ylabel(f'Density at position y={self.ny // 2}')
+            #self.ax.set_title(f'Step: {step}')
+            #self.ax.legend()
             save_path = os.path.join(
                 self.path, f'density_decay_{step}.png')
             self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
         else:
             self.ax.cla()
-            self.ax.set_xlim([0, self.nx])
-            self.ax.set_ylim([-self.epsilon, self.epsilon])
+            self.ax.set_xlim([0, self.nx - 1])
+            self.ax.set_ylim([-self.padding_y, self.padding_y])
             self.ax.plot(np.arange(self.ny), velocities[0, self.nx//2, :], label='Simulated')
             viscosity = CS ** 2 * (1.0 / self.omega - 0.5)
             self.ax.plot(np.arange(self.ny), self.calculate_analytical_sol(self.epsilon, viscosity, step, np.arange(self.ny), self.ny),
-                        label="Analytical", linestyle='--', dashes=(4, 7))
-            self.ax.set_xlabel('y-Position')
-            self.ax.set_ylabel(f'Velocity $u_x$(x={self.nx // 2}, y)')
-            self.ax.legend()
+                        label="Analytical", linestyle='--')
+            self.ax.set_xlabel('y-position')
+            self.ax.set_ylabel(f'Velocity at position x={self.nx // 2}')
+            if(step == 0):
+                self.ax.legend()
             save_path = os.path.join(
                 self.path, f'shear_wave_{step}.png')
             self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
     def return_viscosity(self, steps):
+        x = np.arange(steps)
+        coef = 2 * np.pi / self.ny
         if self.sub_experiment == 'density':
             self.quantities = np.array(self.quantities)
             x = argrelextrema(self.quantities, np.greater)[0]
             self.quantities = self.quantities[x]
-        else:
-            x = np.arange(steps)
-
-        coef = 2 * np.pi / self.nx
-        simulated_viscosity = curve_fit(
+            coef = 2 * np.pi / self.nx
+       
+        sim_visc = curve_fit(
             lambda t, visc: self.epsilon * np.exp(-visc * t * coef ** 2), xdata=x, ydata=self.quantities)[0][0]
-        analytical_viscosity = (1/3) * ((1/self.omega) - 0.5)
+        ana_visc = (1/3) * ((1/self.omega) - 0.5)
 
-        return simulated_viscosity, analytical_viscosity
+        return sim_visc, ana_visc
 
 
 class CouetteFlowPlotter(Plotter):
