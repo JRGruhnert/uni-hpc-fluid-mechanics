@@ -46,7 +46,7 @@ def run_couette_flow_sim(args):
     
 def run_poiseuille_flow_sim(args):
     poiseuille_flow_sim(args.nx, args.ny, args.total_steps, args.plot_every, 
-                        args.output_dir, args.omega, args.pressure_left, args.pressure_right)
+                        args.output_dir, args.omega, args.pressure_in, args.pressure_out)
 
 def run_sliding_lid_sim(args):
     sliding_lid_sim(args.nx, args.ny, args.total_steps, args.plot_every, 
@@ -67,8 +67,8 @@ parser.add_argument('-out', '--output_dir', type=str, help='Output directory', d
 sub_parser = parser.add_subparsers(help='sub-command help', required=True)
 
 shear_wave_parser = sub_parser.add_parser('shear_wave', help='shear_wave help')
-shear_wave_parser.add_argument('-o', '--omega', type=float, help='Omega', default=0.3)
-shear_wave_parser.add_argument('-ep', '--epsilon', type=float, help='Epsilon', default=0.1)
+shear_wave_parser.add_argument('-o', '--omega', type=float, help='Omega', default=1.0)
+shear_wave_parser.add_argument('-ep', '--epsilon', type=float, help='Epsilon', default=0.01)
 shear_wave_parser.add_argument('-p0', '--p0', type=float, help='P0', default=1.0)
 shear_wave_parser.add_argument('-ex', '--experiment', type=str, choices=['density', 'velocity'], help='Experiment', required=True)
 shear_wave_parser.set_defaults(func=run_shear_wave_sim)
@@ -87,8 +87,8 @@ couette_flow_parser.set_defaults(func=run_couette_flow_sim)
 
 poiseuille_flow_parser = sub_parser.add_parser('poiseuille_flow', help='poiseuille_flow help')
 poiseuille_flow_parser.add_argument('-o', '--omega', type=float, help='Omega', default=0.3)
-poiseuille_flow_parser.add_argument('-pl', '--pressure_left', type=float, default=3.1, help='Pressure on the left')
-poiseuille_flow_parser.add_argument('-pr', '--pressure_right', type=float, default=3.0, help='Pressure on the right')
+poiseuille_flow_parser.add_argument('-pi', '--pressure_in', type=float, default=1.005, help='Pressure on the left')
+poiseuille_flow_parser.add_argument('-po', '--pressure_out', type=float, default=1.0, help='Pressure on the right')
 poiseuille_flow_parser.set_defaults(func=run_poiseuille_flow_sim)
     
 sliding_lid_parser = sub_parser.add_parser('sliding_lid', help='sliding_lid help')

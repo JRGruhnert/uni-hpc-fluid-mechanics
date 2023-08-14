@@ -79,7 +79,7 @@ class Periodic(Boundary):
         if (placement == 'top' or placement == 'bottom'):
             raise ValueError("Invalid placement: {}".format(self.placement))
         super().__init__(placement)
-        self.pressure = pressure / CS**2
+        self.pressure = pressure #/ (CS**2)
         self.n = n
 
     def pre(self, f, f_eq, velocities):

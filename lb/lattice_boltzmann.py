@@ -24,23 +24,23 @@ class LatticeBoltzmann():
                     left_address, right_address, 
                     bottom_address, top_address) -> None:
         # Send to and recieve from left
-        recvbuf = self.f[:, 0, :]
-        comm.Sendrecv(sendbuf=self.f[:, 1, :], dest=left_address,
+        recvbuf = self.f[:, 0, :].copy()
+        comm.Sendrecv(sendbuf=self.f[:, 1, :].copy(), dest=left_address,
                   recvbuf=recvbuf, source=left_address)
         if left_address >= 0: self.f[:, 0, :] = recvbuf
         # Send to right
-        recvbuf = self.f[:, -1, :]
-        comm.Sendrecv(sendbuf=self.f[:, -2, :], dest=right_address,
+        recvbuf = self.f[:, -1, :].copy()
+        comm.Sendrecv(sendbuf=self.f[:, -2, :].copy(), dest=right_address,
                   recvbuf=recvbuf, source=right_address)
         if right_address >= 0: self.f[:, -1, :] = recvbuf
         # Send to bottom
-        recvbuf = self.f[:, :, 0]
-        comm.Sendrecv(sendbuf=self.f[:, :, 1], dest=bottom_address,
+        recvbuf = self.f[:, :, 0].copy()
+        comm.Sendrecv(sendbuf=self.f[:, :, 1].copy(), dest=bottom_address,
                   recvbuf=recvbuf, source=bottom_address)
         if bottom_address >= 0: self.f[:, :, 0] = recvbuf
         # Send to top
-        recvbuf = self.f[:, :, -1]
-        comm.Sendrecv(sendbuf=self.f[:, :, -2], dest=top_address,
+        recvbuf = self.f[:, :, -1].copy()
+        comm.Sendrecv(sendbuf=self.f[:, :, -2].copy(), dest=top_address,
                   recvbuf=recvbuf, source=top_address)
         if top_address >= 0: self.f[:, :, -1] = recvbuf
 
