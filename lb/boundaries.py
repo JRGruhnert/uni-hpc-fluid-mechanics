@@ -26,7 +26,7 @@ class Boundary(ABC):
  
     def pre(self, f):
         """ Called before the streaming to cache boundary conditions 
-            by saving the the distribution function at the boundary."""
+            by saving the distribution function at the boundary."""
         if (self.placement == 'top'):
             self.f_cache = f[:, :, -1]
         elif (self.placement == 'bottom'):
