@@ -49,11 +49,9 @@ class ShearWavePlotter(Plotter):
             self.ax.cla()
             self.ax.set_xlim([0, self.nx-1])
             self.ax.set_ylim([self.p0 - self.padding_y, self.p0 + self.padding_y])
-            self.ax.plot(np.arange(self.nx), rho[:, self.ny//2])
+            self.ax.scatter(np.arange(self.nx), rho[:, self.ny//2], c='red', marker='.')
             self.ax.set_xlabel('x-position')
             self.ax.set_ylabel(f'Density at position y={self.ny // 2}')
-            #self.ax.set_title(f'Step: {step}')
-            #self.ax.legend()
             save_path = os.path.join(
                 self.path, f'density_decay_{step}.png')
             self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
@@ -61,10 +59,10 @@ class ShearWavePlotter(Plotter):
             self.ax.cla()
             self.ax.set_xlim([0, self.nx - 1])
             self.ax.set_ylim([-self.padding_y, self.padding_y])
-            self.ax.plot(np.arange(self.ny), velocities[0, self.nx//2, :], label='Simulated')
             viscosity = CS ** 2 * (1.0 / self.omega - 0.5)
             self.ax.plot(np.arange(self.ny), self.calculate_analytical_sol(self.epsilon, viscosity, step, np.arange(self.ny), self.ny),
-                        label="Analytical", linestyle='--')
+                        label="Analytical", c="blue")
+            self.ax.scatter(np.arange(self.ny), velocities[0, self.nx//2, :], c="red", marker=".", label='Simulated')
             self.ax.set_xlabel('y-position')
             self.ax.set_ylabel(f'Velocity at position x={self.nx // 2}')
             if(step == 0):
@@ -92,40 +90,31 @@ class ShearWavePlotter(Plotter):
 class CouetteFlowPlotter(Plotter):
     def __init__(self, nx, ny, steps, plot_every, path , wall_velocity):
         super().__init__(nx, ny, steps, "couette_flow", path)
-        self.padding_y = 0#0.5
-        self.padding_x = 0#0.002
-       
+        self.padding_y = 0.75
+        self.padding_x = 0.002
+        self.plot_every = plot_every
+        self.wall_velocity = wall_velocity
         self.y = np.arange(ny)
     
         self.analytical = (self.y) / (ny-1) * wall_velocity
-        self.ax.set_xlim([-self.padding_x, wall_velocity + self.padding_x])
-        self.ax.set_ylim([-self.padding_y, ny - 1 + self.padding_y])
-        self.ax.set_ylabel('y position')
-        self.ax.set_xlabel(f'Velocity $v_x$(x = {self.nx//2}, y)')
         # Seitenverhältnis einstellen
-        ratio = abs((self.ax.get_xlim()[1] - self.ax.get_xlim()[0])/(self.ax.get_ylim()[0] - self.ax.get_ylim()[1])) * 0.75
-        self.ax.set_aspect(ratio)
-
-        # colorbar settings
-        self.n_lines = steps // plot_every
-        self.help_arr = []
-        self.norm = mpl.colors.Normalize(vmin=0, vmax=steps)
-        self.cmap = mpl.cm.ScalarMappable(norm=self.norm, cmap='cividis')
-        self.cmap.set_array([])
+        #ratio = abs((self.ax.get_xlim()[1] - self.ax.get_xlim()[0])/(self.ax.get_ylim()[0] - self.ax.get_ylim()[1])) * 0.75
+        #self.ax.set_aspect(ratio)
+        #self.ax.set_aspect(0.75)
 
     def plot(self, step, velocities):
-        if step == 0 or step == (self.total_steps - 1):
-            self.help_arr.append(step)
-
-        self.ax.plot(velocities[0, self.nx//2, :], self.y, c=self.cmap.to_rgba(step + 1))#, color=COLORS[SIMULATION])
-
-    def save(self, step):
-        self.ax.plot(self.analytical, self.y, linestyle='dashed', c='darkred', label="Analytical Velocity")#, color=COLORS[ANALYTIC])
-        self.ax.axhline(self.ny-1, linewidth=2, color='red', label='Moving Wall')
-        self.ax.axhline(0.0, linewidth=2, color='black', label='Rigid Wall')
+        self.ax.cla()
+        self.ax.set_xlim([-self.padding_x, self.wall_velocity + self.padding_x])
+        self.ax.set_ylim([-self.padding_y, self.ny - 1 + self.padding_y])
+        self.ax.set_ylabel('y position')
+        self.ax.set_xlabel(f'Velocity $v_x$(x = {self.nx//2}, y)')
+        self.ax.plot(self.analytical, self.y, c="blue", label="Analytical Velocity", alpha=0.8)
+        self.ax.scatter(velocities[0, self.nx//2, :], self.y, c="red", marker=".", label="Simulated Velocity")
+        self.ax.axhline(self.ny-0.5, linewidth=2, color='orange', label='Moving Wall')
+        self.ax.axhline(-0.5, linewidth=2, color='black', label='Rigid Wall')
         save_path = os.path.join(self.path, f'couette_flow_{step}')
-        self.ax.legend()  # add legend
-        self.fig.colorbar(self.cmap, ticks=self.help_arr, label='Time Step', orientation='vertical')  # add colorbar
+        if(step == 0):
+            self.ax.legend()
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 
@@ -144,16 +133,17 @@ class PoiseuilleFlowPlotter(Plotter):
         partial_derivative = CS**2 *(self.pressure_out - self.pressure_in) / self.nx # partial derivative of pressure
         analytical = -((1 / avg_density) * partial_derivative * self.y * (self.ny-1 - self.y)) # analytical velocity
         
-        self.ax.set_xlim([0 - (np.max(analytical) * 1.05 - np.max(analytical)), np.max(analytical) * 1.1])
-        self.ax.plot(velocities[0, self.nx//2, :], self.y, label="Simulated Velocity", c='red')
-        self.ax.plot(analytical, self.y, linestyle='dashed', label="Analytical Velocity")
-        self.ax.set_ylabel('y')
-        self.ax.set_xlabel('velocity')
+        self.ax.set_xlim([0 - (np.max(analytical) * 1.005 - np.max(analytical)), np.max(analytical) * 1.005])
+        self.ax.set_ylim([-0.75, self.ny - 1 + 0.75])
+        self.ax.plot(analytical, self.y, c="blue", label="Analytical Velocity", alpha=0.8)
+        self.ax.scatter(velocities[0, self.nx//2, :], self.y, label="Simulated Velocity", c='red', marker='.')
+        self.ax.set_ylabel('y position')
+        self.ax.set_xlabel(f'Velocity $v_x$(x = {self.nx//2}, y)')
         # plot walls
-        self.ax.axhline(0, c='black', linewidth=2, label="Rigid Wall")  # indicate rigid bottom wall
-        self.ax.axhline(self.ny-1, c='black', linewidth=2)  # indicate rigid bottom wall
+        self.ax.axhline(-0.5, c='black', linewidth=2, label="Rigid Wall")  # indicate rigid bottom wall
+        self.ax.axhline(self.ny-0.5, c='black', linewidth=2)  # indicate rigid bottom wall
         if(step == 0):
-            self.ax.legend()
+            self.ax.legend(loc='center')
         save_path = os.path.join(self.path, f'pousielle_flow_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
@@ -162,8 +152,8 @@ class SlidingLidPlotter(Plotter):
     def __init__(self, nx, ny, total_steps, path, viscosity, wv):
         super().__init__(nx, ny, total_steps, "sliding_lid/sequential", path)
 
-        self.padding_y = 5
-        self.padding_x = 5 
+        self.padding_y = 3
+        self.padding_x = 3
         self.x, self.y = np.meshgrid(np.arange(nx), np.arange(ny))
         self.viscosity = viscosity
         self.wv = wv
@@ -172,9 +162,9 @@ class SlidingLidPlotter(Plotter):
         self.ax.cla()
         speed = np.sqrt(velocities.T[self.y, self.x, 0] ** 2  + velocities.T[self.y, self.x, 1] **2)
         self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], 
-                           velocities.T[:, :, 1], color=speed, cmap='cool', density=0.8)
+                           velocities.T[:, :, 1], color=speed, cmap='plasma')
        
-        self.ax.set_xlim([0 - self.padding_x, self.nx + self.padding_x])
+        self.ax.set_xlim([0 - self.padding_x, self.nx +self.padding_x])
         self.ax.set_ylim([0 - self.padding_y, self.ny + self.padding_y])
         self.ax.set_ylabel('y-position')
         self.ax.set_xlabel('x-position')

@@ -10,7 +10,7 @@ def sliding_lid_sim_mpi(nx: int, ny: int, total_steps: int, plot_every: int, out
     for(step) in range(total_steps):
         manager.tick()
         # plot sliding lid every 1000 steps 
-        if((step % plot_every == 0)):
+        if((step % plot_every == 0) and (step != 0)):
             velocities_x_file = 'ux_{}.npy'.format(step)
             velocities_y_file = 'uy_{}.npy'.format(step)
             manager.save_velocities(output_dir, velocities_x_file, velocities_y_file)

@@ -20,4 +20,3 @@ def couette_flow_sim(nx: int, ny: int, total_steps: int, plot_every: int, output
         if((step % plot_every == 0)):
             plotter.plot(step, latticeBoltzmann.velocities)
             print("Step: {}".format(step))
-    plotter.save(total_steps - 1)

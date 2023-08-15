@@ -9,8 +9,8 @@ def sliding_lid_sim(nx: int, ny: int, total_steps: int, plot_every: int, output_
     rho = np.ones((nx, ny))
     velocities = np.zeros((2, nx, ny))
     omega = 1 / (0.5 + ((wall_velocity * nx) / reynolds) / (1/3))
-    viscosity = CS**2 * (1.0 / omega - 0.5) # for Re=1000
-    reynolds_number = wall_velocity * nx / viscosity  # calculate reynolds number
+    viscosity = np.round(CS**2 * (1.0 / omega - 0.5), 3) # for Re=1000
+    reynolds_number = np.round(wall_velocity * nx / viscosity)  # calculate reynolds number
     print("Reynolds number: {}".format(reynolds_number))
     print("Omega: {}".format(omega))
     print("Viscosity: {}".format(viscosity))
@@ -25,7 +25,7 @@ def sliding_lid_sim(nx: int, ny: int, total_steps: int, plot_every: int, output_
         latticeBoltzmann.tick()
         
         # plot sliding lid every 1000 steps 
-        if((step % plot_every == 0)):
+        if((step % plot_every == 0) and (step != 0)):
             plotter.plot(latticeBoltzmann.velocities, step)
             print("Step: {}".format(step))
 

@@ -35,8 +35,9 @@ def run_shear_wave_viscosity_sim(args):
     # set up plot
     plt.cla()
     plt.xlim(0.02,1.98)
-    #plt.xticks(np.round(omegas, 1))
-    plt.plot(omegas, ana_viscosities, c="blue", label='Analytical')
+    plt.xticks(np.round(omegas, 1))
+    plt.plot(omegas, ana_viscosities, c="blue", label='Analytical', alpha=0.8)
+    plt.scatter(omegas, ana_viscosities, marker='.', c="blue")
     plt.scatter(omegas, sim_viscosities, marker='x', c="red", label='Simulated')
     plt.xlabel('Relaxation parameter \u03C9')
     plt.ylabel('Viscosity \u03BD')
