@@ -171,7 +171,7 @@ class SlidingLidPlotter(Plotter):
         self.ax.cla()
         speed = np.sqrt(velocities.T[self.y, self.x, 0] ** 2  + velocities.T[self.y, self.x, 1] **2)
         self.ax.streamplot(self.x, self.y, velocities.T[:, :, 0], 
-                           velocities.T[:, :, 1], color=speed, cmap='RdBu_r', density=0.8)
+                           velocities.T[:, :, 1], color=speed, cmap='cool', density=0.8)
        
         self.ax.set_xlim([0 - self.padding_x, self.nx + self.padding_x])
         self.ax.set_ylim([0 - self.padding_y, self.ny + self.padding_y])

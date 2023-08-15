@@ -14,11 +14,12 @@ def run_shear_wave_sim(args):
                    args.plot_every, args.output_dir, args.omega, 
                    args.epsilon, args.p0, args.experiment, False)
     
-
 def run_shear_wave_viscosity_sim(args):
     sim_viscosities = []
     ana_viscosities = []
-    for omega in args.omegas:
+
+    omegas = np.arange(args.omega_start, args.omega_end, args.omega_step)
+    for omega in omegas:
         sim_vis, ana_vis = shear_wave_sim(args.nx, args.ny, args.total_steps, 
                    args.plot_every, args.output_dir, omega, 
                    args.epsilon, args.p0, args.experiment, True)
@@ -31,13 +32,15 @@ def run_shear_wave_viscosity_sim(args):
     path = os.path.join(vis_path, '{}_viscosity.png' .format(args.experiment))
 
     # Plot density viscosity vs omega
+    # set up plot
     plt.cla()
-    plt.scatter(args.omegas, np.log(sim_viscosities), marker='x')
-    plt.scatter(args.omegas, np.log(ana_viscosities), marker='x')
-    plt.xlabel('w')
-    plt.yscale('log')
-    plt.ylabel('Log(Viscosity)')
-    plt.legend(['Simulated', 'Analytical'])
+    plt.xlim(0.02,1.98)
+    #plt.xticks(np.round(omegas, 1))
+    plt.plot(omegas, ana_viscosities, c="blue", label='Analytical')
+    plt.scatter(omegas, sim_viscosities, marker='x', c="red", label='Simulated')
+    plt.xlabel('Relaxation parameter \u03C9')
+    plt.ylabel('Viscosity \u03BD')
+    plt.legend(loc='upper right')
     plt.savefig(path, bbox_inches='tight', pad_inches=0)
 
 def run_couette_flow_sim(args):
@@ -74,8 +77,10 @@ shear_wave_parser.add_argument('-exp', '--experiment', type=str, choices=['densi
 shear_wave_parser.set_defaults(func=run_shear_wave_sim)
 
 shear_wave_viscosity_parser = sub_parser.add_parser('shear_wave_viscosity', help='shear_wave help')
-shear_wave_viscosity_parser.add_argument('-os', '--omegas', nargs='+', type=float, help='Omega', default=[0.1, 2.01, 0.1])
-shear_wave_viscosity_parser.add_argument('-eps', '--epsilon', type=float, help='Epsilon', default=0.1)
+shear_wave_viscosity_parser.add_argument('-os', '--omega_start', type=float, help='Omega start range', default=0.1)
+shear_wave_viscosity_parser.add_argument('-oe', '--omega_end', type=float, help='Omega end range (not included)', default=1.91)
+shear_wave_viscosity_parser.add_argument('-s', '--omega_step', type=float, help='Omega step interval', default=0.1)
+shear_wave_viscosity_parser.add_argument('-eps', '--epsilon', type=float, help='Epsilon', default=0.01)
 shear_wave_viscosity_parser.add_argument('-p0', '--p0', type=float, help='P0', default=1.0)
 shear_wave_viscosity_parser.add_argument('-exp', '--experiment', type=str, choices=['density', 'velocity'], help='Experiment', required=True)
 shear_wave_viscosity_parser.set_defaults(func=run_shear_wave_viscosity_sim)

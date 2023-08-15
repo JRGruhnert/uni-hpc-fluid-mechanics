@@ -7,8 +7,8 @@ def shear_wave_sim(nx: int, ny: int, total_steps: int, plot_every: int, output_d
 
     rho = None
     velocities = None
-    x, y = np.meshgrid(np.arange(nx), np.arange(ny))
-
+    #x, y = np.meshgrid(np.arange(nx), np.arange(ny))
+    x, y = np.arange(nx), np.arange(ny)
     if(sub_experiment == "density"):
        # shear wave experiment 1 (density)
         rho = (p0 + epsilon * np.sin(2 * np.pi * x / nx)).T
@@ -23,7 +23,7 @@ def shear_wave_sim(nx: int, ny: int, total_steps: int, plot_every: int, output_d
         return
 
     latticeBoltzmann = LatticeBoltzmann(rho, velocities, omega)
-    plotter = ShearWavePlotter(nx, ny, total_steps, output_dir, sub_experiment, p0, epsilon, omega,)
+    plotter = ShearWavePlotter(nx, ny, total_steps, output_dir, sub_experiment, p0, epsilon, omega)
 
     for(step) in range(total_steps):
         # update the lattice
