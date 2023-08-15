@@ -7,6 +7,7 @@ class Boundary(ABC):
     '''Abstract class for all kind boundaries'''
     def __init__(self, placement):
         '''Initializes the boundary and sets the input and output channels'''
+        self.pre_called = False
         self.placement = placement
         if (placement == 'top'):
             self.input_channels = np.array([4, 7, 8]) 
@@ -41,6 +42,16 @@ class Boundary(ABC):
     def after(self):
         """Called after the streaming to apply boundary conditions."""
         pass
+
+    def _invalid_call_order(self, caller: str, pre_called: bool):
+        '''Checks if the boundary was called in the wrong order.'''
+        self.pre_called = pre_called 
+        if (caller == 'pre' and self.pre_called):
+            raise ValueError("Boundary pre-streaming called before after-streaming.")
+        elif (caller == 'after' and not self.pre_called):
+            raise ValueError("Boundary after-streaming called before pre-streaming.")
+
+
 
 
 class RigidWall(Boundary):

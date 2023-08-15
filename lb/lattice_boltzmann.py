@@ -17,9 +17,9 @@ class LatticeBoltzmann():
 
     def tick(self) -> None:
         '''Executes one time step for the Lattice Boltzmann method'''
-        self._pre_stream_boundaries()
+        self._pre_stream_boundary_handling()
         self._stream()
-        self._after_stream_boundaries()
+        self._after_stream_boundary_handling()
         self._collide()
     
     def communicate(self, comm,
@@ -47,7 +47,7 @@ class LatticeBoltzmann():
                   recvbuf=recvbuf, source=top_address)
         if top_address >= 0: self.f[:, :, -1] = recvbuf
 
-    def _pre_stream_boundaries(self) -> None:
+    def _pre_stream_boundary_handling(self) -> None:
         '''Apply boundary conditions before streaming and cashing f for bounce back'''
         for boundary in self.boundaries:
             if isinstance(boundary, Periodic):
@@ -60,7 +60,7 @@ class LatticeBoltzmann():
         for i in range(9):
             self.f[i] = np.roll(self.f[i], C[i], axis=(0, 1))
     
-    def _after_stream_boundaries(self) -> None:
+    def _after_stream_boundary_handling(self) -> None:
         '''Apply boundary conditions after streaming'''''
         for boundary in self.boundaries:
             boundary.after(self.f)
