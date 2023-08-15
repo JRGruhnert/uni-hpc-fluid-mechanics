@@ -4,6 +4,7 @@ from lb.helper import calculate_density, calculate_equilibrium, calculate_veloci
 from lb.vars import C
 
 class LatticeBoltzmann():
+    '''Class for the Lattice Boltzmann method.'''
     def __init__(self, rho: np.ndarray, velocities: np.ndarray, omega: float, boundaries: list[Boundary] = []) -> None:
         '''Initializes the Lattice Boltzmann method'''
         self.rho = rho # Density on the grid
@@ -24,6 +25,7 @@ class LatticeBoltzmann():
     def communicate(self, comm,
                     left_address, right_address, 
                     bottom_address, top_address) -> None:
+        '''Communicate with other processes by sending and recieving neigbouring cells'''
         # Send to and recieve from left
         recvbuf = self.f[:, 0, :].copy()
         comm.Sendrecv(sendbuf=self.f[:, 1, :].copy(), dest=left_address,
