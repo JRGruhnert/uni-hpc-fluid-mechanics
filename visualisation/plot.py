@@ -144,15 +144,16 @@ class PoiseuilleFlowPlotter(Plotter):
         partial_derivative = CS**2 *(self.pressure_out - self.pressure_in) / self.nx # partial derivative of pressure
         analytical = -((1 / avg_density) * partial_derivative * self.y * (self.ny-1 - self.y)) # analytical velocity
         
-        self.ax.set_xlim([0, np.max(analytical) * 1.1])
+        self.ax.set_xlim([0 - (np.max(analytical) * 1.05 - np.max(analytical)), np.max(analytical) * 1.1])
+        self.ax.plot(velocities[0, self.nx//2, :], self.y, label="Simulated Velocity", c='red')
         self.ax.plot(analytical, self.y, linestyle='dashed', label="Analytical Velocity")
-        self.ax.plot(velocities[0, self.nx//2, :], self.y, label="Simulated Velocity")
         self.ax.set_ylabel('y')
         self.ax.set_xlabel('velocity')
         # plot walls
-        self.ax.axhline(0, c='black', linewidth=3.5, label="Rigid Wall")  # indicate rigid bottom wall
-        self.ax.axhline(self.ny-1, c='black', linewidth=3.5)  # indicate rigid bottom wall
-        self.ax.legend()
+        self.ax.axhline(0, c='black', linewidth=2, label="Rigid Wall")  # indicate rigid bottom wall
+        self.ax.axhline(self.ny-1, c='black', linewidth=2)  # indicate rigid bottom wall
+        if(step == 0):
+            self.ax.legend()
         save_path = os.path.join(self.path, f'pousielle_flow_{step}')
         self.fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 

@@ -91,8 +91,8 @@ couette_flow_parser.add_argument('-wv', '--wall_velocity', type=float, help='Vel
 couette_flow_parser.set_defaults(func=run_couette_flow_sim)
 
 poiseuille_flow_parser = sub_parser.add_parser('poiseuille_flow', help='poiseuille_flow help')
-poiseuille_flow_parser.add_argument('-o', '--omega', type=float, help='Omega', default=0.3)
-poiseuille_flow_parser.add_argument('-pi', '--pressure_in', type=float, default=1.005, help='Pressure on the left')
+poiseuille_flow_parser.add_argument('-o', '--omega', type=float, help='Omega', default=1.0)
+poiseuille_flow_parser.add_argument('-pi', '--pressure_in', type=float, default=1.002, help='Pressure on the left')
 poiseuille_flow_parser.add_argument('-po', '--pressure_out', type=float, default=1.0, help='Pressure on the right')
 poiseuille_flow_parser.set_defaults(func=run_poiseuille_flow_sim)
     
