@@ -1,65 +1,73 @@
 import numpy as np
-from lb.boundaries import Boundary, PortalWall
-from lb.vars import C, W
+from lb.boundaries import Boundary, Periodic
+from lb.helper import calculate_density, calculate_equilibrium, calculate_velocity_field
+from lb.vars import C
 
 class LatticeBoltzmann():
+    '''Class for the Lattice Boltzmann method.'''
     def __init__(self, rho: np.ndarray, velocities: np.ndarray, omega: float, boundaries: list[Boundary] = []) -> None:
-        self.rho = rho
-        self.velocities = velocities
-        self.omega = omega
-        self.boundaries = boundaries
-        self.f = calculate_equilibrium(self.rho, self.velocities)
-        self.f_eq = self.f
+        '''Initializes the Lattice Boltzmann method'''
+        self.rho = rho # Density on the grid
+        self.velocities = velocities # List of velocities on the grid
+        self.omega = omega # Relaxation parameter
+        self.boundaries = boundaries # List of boundaries
+        self.f = calculate_equilibrium(self.rho, self.velocities) #Initial distribution function
+        self.f_eq = self.f # Initial equilibrium distribution function
         
 
-    # Executes one time step for the Lattice Boltzmann method
     def tick(self) -> None:
-        self._pre_stream_boundaries()
+        '''Executes one time step for the Lattice Boltzmann method'''
+        self._pre_stream_boundary_handling()
         self._stream()
-        self._after_stream_boundaries()
+        self._after_stream_boundary_handling()
         self._collide()
+    
+    def communicate(self, comm,
+                    left_address, right_address, 
+                    bottom_address, top_address) -> None:
+        '''Communicate with other processes by sending and recieving neigbouring cells'''
+        # Send to and recieve from left
+        recvbuf = self.f[:, 0, :].copy()
+        comm.Sendrecv(sendbuf=self.f[:, 1, :].copy(), dest=left_address,
+                  recvbuf=recvbuf, source=left_address)
+        if left_address >= 0: self.f[:, 0, :] = recvbuf
+        # Send to right
+        recvbuf = self.f[:, -1, :].copy()
+        comm.Sendrecv(sendbuf=self.f[:, -2, :].copy(), dest=right_address,
+                  recvbuf=recvbuf, source=right_address)
+        if right_address >= 0: self.f[:, -1, :] = recvbuf
+        # Send to bottom
+        recvbuf = self.f[:, :, 0].copy()
+        comm.Sendrecv(sendbuf=self.f[:, :, 1].copy(), dest=bottom_address,
+                  recvbuf=recvbuf, source=bottom_address)
+        if bottom_address >= 0: self.f[:, :, 0] = recvbuf
+        # Send to top
+        recvbuf = self.f[:, :, -1].copy()
+        comm.Sendrecv(sendbuf=self.f[:, :, -2].copy(), dest=top_address,
+                  recvbuf=recvbuf, source=top_address)
+        if top_address >= 0: self.f[:, :, -1] = recvbuf
 
-    # Stream particles
+    def _pre_stream_boundary_handling(self) -> None:
+        '''Apply boundary conditions before streaming and cashing f for bounce back'''
+        for boundary in self.boundaries:
+            if isinstance(boundary, Periodic):
+                boundary.pre(self.f, self.f_eq, self.velocities)
+            else:
+                boundary.pre(self.f)
+
     def _stream(self) -> None:
+        '''Stream particles'''
         for i in range(9):
             self.f[i] = np.roll(self.f[i], C[i], axis=(0, 1))
+    
+    def _after_stream_boundary_handling(self) -> None:
+        '''Apply boundary conditions after streaming'''''
+        for boundary in self.boundaries:
+            boundary.after(self.f)
 
-    # Collide particles
     def _collide(self) -> None:
+        '''Collide particles'''
         self.rho = calculate_density(self.f)
         self.velocities = calculate_velocity_field(self.f, self.rho)
         self.f_eq = calculate_equilibrium(self.rho, self.velocities)
         self.f += self.omega * (self.f_eq - self.f)
-
-    # Bounce back particles from a wall
-    def _pre_stream_boundaries(self) -> None:
-        for boundary in self.boundaries:
-            if isinstance(boundary, PortalWall):
-                boundary.pre(self.f, self.f_eq, self.velocities)
-            else:
-                boundary.pre(self.f)
-    
-     # Bounce back particles from a wall
-    def _after_stream_boundaries(self) -> None:
-        for boundary in self.boundaries:
-            boundary.after(self.f)
-
-# Helper functions to calculate density, velocity field, equilibrium
-
-def calculate_density(f: np.ndarray) -> np.ndarray:
-    return np.sum(f, axis=0)
-
-def calculate_velocity_field(f: np.ndarray, rho: np.ndarray) -> np.ndarray:
-    #return np.einsum('ij,jkl->ikl', C.T, f) / rho
-    #print(rho)
-    return np.dot(f.T, C).T / rho
-
-def calculate_equilibrium(rho: np.ndarray, velocities: np.ndarray) -> np.ndarray:
-    #test1 = (velocities.T @ C.T).T
-    #test2 = np.linalg.norm(velocities, axis=0) ** 2
-
-    test1 = np.dot(velocities.T, C.T).T
-    test2 = np.sum(velocities**2, axis=0)
-    return (W * (rho * (1 + 3 * test1 + 4.5 * test1**2 - 1.5 * test2)).T).T
-        
-    
