@@ -4,10 +4,12 @@ from lb.helper import calculate_equilibrium
 from lb.vars import C, CS, W
 
 class Boundary(ABC):
+    '''Abstract class for all kind boundaries'''
     def __init__(self, placement):
+        '''Initializes the boundary and sets the input and output channels'''
         self.placement = placement
         if (placement == 'top'):
-            self.input_channels = np.array([4, 7, 8])
+            self.input_channels = np.array([4, 7, 8]) 
             self.output_channels = np.array([2, 5, 6])
         elif (placement == 'bottom'):
             self.input_channels = np.array([2, 5, 6])
@@ -22,7 +24,8 @@ class Boundary(ABC):
             raise ValueError("Invalid placement: {}".format(placement))
  
     def pre(self, f):
-        """Called before the streaming to cache boundary conditions."""
+        """ Called before the streaming to cache boundary conditions 
+            by saving the the distribution function at the boundary."""
         if (self.placement == 'top'):
             self.f_cache = f[:, :, -1]
         elif (self.placement == 'bottom'):
@@ -41,10 +44,13 @@ class Boundary(ABC):
 
 
 class RigidWall(Boundary):
+    ''' Class for rigid walls where populations are bounced back at the boundary.'''
     def __init__(self, placement='bottom'):
         super().__init__(placement)
     
     def after(self, f):
+        ''' Copys the cached pre-streaming distribution function to the 
+            after-streaming distribution function at the boundary and flips the velocity component. '''
         if (self.placement == 'top'):
             f[self.input_channels, :, -1] = self.f_cache[self.output_channels]
         elif (self.placement == 'bottom'):
@@ -59,14 +65,18 @@ class RigidWall(Boundary):
 
 
 class TopMovingWall(Boundary):
+    ''' Class for moving walls where populations are bounced back at the boundary and a momentum is applied. '''
     def __init__(self, placement, wv):
-        #only horizontal implementation
+        # only top implementation
         if (placement == 'bottom' or placement == 'left' or placement == 'right'):
             raise ValueError("Invalid placement: {}".format(self.placement))
         super().__init__(placement)
-        self.velocity = [wv, 0.0]
+        self.velocity = [wv, 0.0] # velocity vector
     
     def after(self, f):
+        ''' Copys the cached pre-streaming distribution function to the 
+            after-streaming distribution function at the boundary and flips the velocity component. 
+            And applies a momentum to the distribution function. '''
         rho = np.sum(f[:, :, 0], axis=0)
         factor = 2 * (1/CS) ** 2
         momentum = factor * (C @ self.velocity) * (W * rho[:, None])
@@ -75,25 +85,27 @@ class TopMovingWall(Boundary):
 
 class Periodic(Boundary):
     def __init__(self, placement, n, pressure):
-        #only horizontal implementation
+        # only horizontal implementation
         if (placement == 'top' or placement == 'bottom'):
             raise ValueError("Invalid placement: {}".format(self.placement))
         super().__init__(placement)
-        self.pressure = pressure #/ (CS**2)
-        self.n = n
+        self.pressure = pressure # pressure at the boundary
+        self.n = n # number of nodes in the y direction
 
     def pre(self, f, f_eq, velocities):
-        if (self.placement == 'left'):
+        ''' Applies the periodic boundary condition before streaming.'''
+        if (self.placement == 'left'): #inlet
             temp_feq = calculate_equilibrium(
                 np.full(self.n, self.pressure),
                 velocities[:, -2, :]).squeeze()
             f[:, 0, :] = temp_feq + (f[:, -2, :] - f_eq[:, -2, :])
-        else:
+        else: #outlet
             temp_feq = calculate_equilibrium(
                 np.full(self.n, self.pressure),
                 velocities[:, 1, :]).squeeze()
             f[:, -1, :] = temp_feq + (f[:, 1, :] - f_eq[:, 1, :])
 
     def after(self, f):
+        '''Nothing to do after streaming (periodic boundary condition)'''
         pass
 

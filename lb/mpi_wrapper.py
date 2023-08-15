@@ -8,6 +8,7 @@ from lb.lattice_boltzmann import LatticeBoltzmann
 
 class MpiWrapper():
     def __init__(self, nx_global: int, ny_global: int, worker_dim_x: int, worker_dim_y: int, reynolds: int, wall_velocity: float):
+        '''Initializes the MPI wrapper. The number of processes is worker_dim_x * worker_dim_y.'''
         self.nx_worker_dim = worker_dim_x
         self.ny_worker_dim = worker_dim_y
         self._comm = MPI.COMM_WORLD
@@ -59,12 +60,14 @@ class MpiWrapper():
         self.lattice = LatticeBoltzmann(rho, velocities, omega, boundaries)
     
     def tick(self):
+        '''Executes one time step for the Lattice Boltzmann method and communicates with neighboring processes'''
         self.lattice.tick()
         self.lattice.communicate(self._cart_comm, 
                                  self.left_address, self.right_address, 
                                  self.bottom_address, self.top_address)
 
     def save_mpiio(self, path, filename, index):
+        '''Save the velocities to a file using MPI-IO. The file format is numpy's .npy format.'''
         self.path = path
         source='sliding_lid/mpi/mpi_raw'
         src_path = os.path.join(self.path, source)
@@ -113,9 +116,11 @@ class MpiWrapper():
 
 
     def get_velocities(self):
+        '''Get the velocities from the lattice'''
         return self.lattice.velocities[:, self.nx_local_without_buffer, self.ny_local_without_buffer]
     
     def save_velocities(self, path, x_velocities_file, y_velocities_file):
+        '''Save the velocities to a file'''
         self.save_mpiio(path, x_velocities_file, 0)
         self.save_mpiio(path, y_velocities_file, 1)
         

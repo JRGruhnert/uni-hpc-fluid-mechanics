@@ -5,12 +5,13 @@ from lb.vars import C
 
 class LatticeBoltzmann():
     def __init__(self, rho: np.ndarray, velocities: np.ndarray, omega: float, boundaries: list[Boundary] = []) -> None:
-        self.rho = rho
-        self.velocities = velocities
-        self.omega = omega
-        self.boundaries = boundaries
-        self.f = calculate_equilibrium(self.rho, self.velocities)
-        self.f_eq = self.f
+        '''Initializes the Lattice Boltzmann method'''
+        self.rho = rho # Density on the grid
+        self.velocities = velocities # List of velocities on the grid
+        self.omega = omega # Relaxation parameter
+        self.boundaries = boundaries # List of boundaries
+        self.f = calculate_equilibrium(self.rho, self.velocities) #Initial distribution function
+        self.f_eq = self.f # Initial equilibrium distribution function
         
 
     def tick(self) -> None:
@@ -45,7 +46,7 @@ class LatticeBoltzmann():
         if top_address >= 0: self.f[:, :, -1] = recvbuf
 
     def _pre_stream_boundaries(self) -> None:
-        '''Bounce back particles from a wall'''
+        '''Apply boundary conditions before streaming and cashing f for bounce back'''
         for boundary in self.boundaries:
             if isinstance(boundary, Periodic):
                 boundary.pre(self.f, self.f_eq, self.velocities)
@@ -58,7 +59,7 @@ class LatticeBoltzmann():
             self.f[i] = np.roll(self.f[i], C[i], axis=(0, 1))
     
     def _after_stream_boundaries(self) -> None:
-        '''Bounce back particles from a wall'''
+        '''Apply boundary conditions after streaming'''''
         for boundary in self.boundaries:
             boundary.after(self.f)
 

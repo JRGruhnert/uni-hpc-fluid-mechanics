@@ -1,9 +1,5 @@
-# Helper functions to calculate density, velocity field, equilibrium
-
 import numpy as np
-
 from lb.vars import C, W
-
 
 def calculate_density(f: np.ndarray) -> np.ndarray:
     '''Calculate the density for a given distribution function'''
