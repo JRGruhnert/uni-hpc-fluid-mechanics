@@ -4,7 +4,7 @@
 
 1. Clone the repository:
    ```sh
-   $ git clone https://github.com/your_username_/Project-Name.git
+   $ git clone https://github.com/JRGruhnert/uni-hpc-fluid-mechanics.git
    ```
 1. Open the projects ordner in your terminal.
 2. Install required packages:
