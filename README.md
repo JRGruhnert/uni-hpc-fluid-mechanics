@@ -1,4 +1,7 @@
-# uni-hpc-fluid-mechanics
+# A Lattice Boltzmann Method (LBM) implementation in python
+## Description
+
+## Results
 
 ## Installation and setup
 
