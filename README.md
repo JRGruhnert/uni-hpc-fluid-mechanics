@@ -6,7 +6,7 @@
    ```sh
    $ git clone https://github.com/JRGruhnert/uni-hpc-fluid-mechanics.git
    ```
-1. Open the projects ordner in your terminal.
+1. Open the projects directory in your terminal.
 2. Install required packages:
     - You may want to create a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
    ```sh
